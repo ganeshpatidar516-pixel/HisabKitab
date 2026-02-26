@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HisabKitab Dashboard</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f4f4f4; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: #25D366; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        #output { margin-top: 20px; white-space: pre-wrap; background: #e9e9e9; padding: 10px; border-radius: 5px; display: none; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>🚀 HisabKitab Pro</h2>
+        <input type="text" id="name" placeholder="ग्राहक का नाम">
+        <input type="text" id="item" placeholder="सामान का नाम">
+        <input type="number" id="qty" placeholder="Quantity">
+        <input type="number" id="price" placeholder="Price per unit">
+        <button onclick="saveHisaab()">Save & Generate Bill</button>
+        <div id="output"></div>
+        <button id="waBtn" style="display:none; margin-top:10px; background:#075E54;">Share on WhatsApp</button>
+    </div>
+
+    <script>
+        async function saveHisaab() {
+            const data = {
+                customer_name: document.getElementById('name').value,
+                item: document.getElementById('item').value,
+                quantity: parseFloat(document.getElementById('qty').value),
+                price_per_unit: parseFloat(document.getElementById('price').value)
+            };
+
+            const response = await fetch('http://localhost:8000/add_hisaab/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            if(result.success) {
+                document.getElementById('output').style.display = 'block';
+                document.getElementById('output').innerText = result.bill_preview;
+                document.getElementById('waBtn').style.display = 'block';
+                document.getElementById('waBtn').onclick = () => window.open(result.whatsapp_link, '_blank');
+                alert("हिसाब सुरक्षित सेव हो गया! 🛡️");
+            }
+        }
+    </script>
+</body>
+</html>
