@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+
+# Database
+*.db
+*.sqlite3
+
+# Env
+aiapi/
+.env
+
+# Build
+build/
+dist/
