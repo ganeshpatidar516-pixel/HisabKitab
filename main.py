@@ -1,100 +1,169 @@
 import sqlite3
-import datetime
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from pydantic import BaseModel
-from typing import Optional
 
+# ---------------- APP ----------------
 app = FastAPI(title="HisabKitab Ultimate AI")
 
-# --- 1. डेटाबेस कनेक्शन (Security First) ---
-def get_db_connection():
-    try:
-        conn = sqlite3.connect('hisabkitab_pro.db', timeout=10)
-        conn.row_factory = sqlite3.Row
-        return conn
-    except Exception as e:
-        print(f"❌ Security Alert: DB Connection Failed: {e}")
-        return None
+DB_NAME = "hisabkitab_pro.db"
 
-# --- 2. डेटाबेस टेबल सेटअप (Auto-Initialize) ---
+# ---------------- DATABASE INIT ----------------
 def init_db():
-    conn = get_db_connection()
-    if conn:
-        # ग्राहकों की टेबल
-        conn.execute('''CREATE TABLE IF NOT EXISTS customers 
-                        (id INTEGER PRIMARY KEY AUTOINCREMENT, 
-                         name TEXT UNIQUE, 
-                         risk_score TEXT DEFAULT 'Low')''')
-        # लेन-देन की टेबल
-        conn.execute('''CREATE TABLE IF NOT EXISTS transactions 
-                        (id INTEGER PRIMARY KEY AUTOINCREMENT, 
-                         cust_id INTEGER, 
-                         item TEXT, 
-                         amount REAL, 
-                         timestamp DATETIME,
-                         FOREIGN KEY(cust_id) REFERENCES customers(id))''')
-        conn.commit()
-        conn.close()
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
 
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS entries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        customer_name TEXT,
+        item TEXT,
+        quantity REAL,
+        price_per_unit REAL,
+        total REAL
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+# app start होते ही DB बन जाए
 init_db()
 
-# --- 3. डेटा मॉडल (Data Model) ---
+# ---------------- AI RISK SCORING ----------------
+def calculate_risk(total_amount: float, quantity: float):
+    if total_amount >= 5000 or quantity >= 50:
+        return "🔴 High Risk"
+    elif total_amount >= 2000:
+        return "🟡 Medium Risk"
+    else:
+        return "🟢 Low Risk"
+
+
+# ---------------- MODEL ----------------
 class HisabEntry(BaseModel):
     customer_name: str
     item: str
     quantity: float
     price_per_unit: float
 
-# --- 4. AI रिस्क इंजन (Step 9: Decision Logic) ---
-def analyze_risk(total: float):
-    if total > 5000:
-        return "🔴 High Risk", "Strict"
-    if total > 2000:
-        return "🟡 Medium Risk", "Normal"
-    return "🟢 Low Risk", "Gentle"
 
-# --- 5. मुख्य API एंडपॉइंट (Main Process) ---
+# ---------------- SAVE FUNCTION ----------------
+def save_entry(data: HisabEntry, total_amount: float):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    INSERT INTO entries (customer_name, item, quantity, price_per_unit, total)
+    VALUES (?, ?, ?, ?, ?)
+    """, (
+        data.customer_name,
+        data.item,
+        data.quantity,
+        data.price_per_unit,
+        total_amount
+    ))
+
+    conn.commit()
+    conn.close()
+
+
+# ---------------- ROOT ----------------
+@app.get("/")
+def root():
+    return {"message": "HisabKitab AI Running 🚀"}
+
+
+# ---------------- CREATE / PROCESS ----------------
 @app.post("/process/")
-async def process_entry(data: HisabEntry):
-    conn = get_db_connection()
-    if not conn:
-        raise HTTPException(status_code=500, detail="Database connection failed")
-    
-    try:
-        cursor = conn.cursor()
-        total_amount = data.quantity * data.price_per_unit
-        risk_label, tone = analyze_risk(total_amount)
-        
-        # ग्राहक को चेक करना या जोड़ना
-        cursor.execute('INSERT OR IGNORE INTO customers (name) VALUES (?)', (data.customer_name,))
-        cursor.execute('SELECT id FROM customers WHERE name = ?', (data.customer_name,))
-        result = cursor.fetchone()
-        cust_id = result[0]
-        
-        # लेन-देन दर्ज करना
-        cursor.execute('''INSERT INTO transactions (cust_id, item, amount, timestamp) 
-                          VALUES (?, ?, ?, ?)''', 
-                       (cust_id, data.item, total_amount, datetime.datetime.now()))
-        
-        conn.commit()
+def process_entry(data: HisabEntry):
+    total_amount = data.quantity * data.price_per_unit
+    risk_level = calculate_risk(total_amount, data.quantity)
 
-        # प्रोफेशनल बिल बनाना
-        bill_msg = (f"📊 *OFFICIAL BILL*\n"
-                    f"👤 ग्राहक: {data.customer_name}\n"
-                    f"📦 सामान: {data.item}\n"
-                    f"💰 कुल राशि: ₹{total_amount}\n"
-                    f"⚠️ AI रिस्क: {risk_label}\n"
-                    f"💡 सलाह: {tone} तरीके से बात करें।")
+    save_entry(data, total_amount)
 
-        return {
-            "success": True,
-            "message": "हिसाब ऑफलाइन सेव हो गया",
-            "ai_analysis": {"risk": risk_label, "tone": tone},
-            "bill": bill_msg,
-            "whatsapp_link": f"https://wa.me/?text={bill_msg.replace(' ', '%20')}"
-        }
-    except Exception as e:
-        conn.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
-    finally:
+    bill_text = (
+        f"📊 OFFICIAL BILL\n"
+        f"👤 ग्राहक: {data.customer_name}\n"
+        f"📦 सामान: {data.item}\n"
+        f"💰 कुल राशि: ₹{total_amount}\n"
+        f"⚠️ Risk Level: {risk_level}"
+    )
+
+    return {
+        "success": True,
+        "total": total_amount,
+        "risk": risk_level,
+        "bill": bill_text
+    }
+
+
+# ---------------- READ ALL ----------------
+@app.get("/entries/")
+def get_all_entries():
+    conn = sqlite3.connect(DB_NAME)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM entries ORDER BY id DESC")
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [dict(row) for row in rows]
+
+
+# ---------------- UPDATE ENTRY ----------------
+@app.put("/entries/{entry_id}")
+def update_entry(entry_id: int, data: HisabEntry):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    total_amount = data.quantity * data.price_per_unit
+
+    cursor.execute("""
+    UPDATE entries
+    SET customer_name=?, item=?, quantity=?, price_per_unit=?, total=?
+    WHERE id=?
+    """, (
+        data.customer_name,
+        data.item,
+        data.quantity,
+        data.price_per_unit,
+        total_amount,
+        entry_id
+    ))
+
+    conn.commit()
+
+    if cursor.rowcount == 0:
         conn.close()
+        return {"success": False, "message": "Entry not found"}
+
+    conn.close()
+
+    return {
+        "success": True,
+        "message": "Entry updated successfully",
+        "total": total_amount
+    }
+
+
+# ---------------- DELETE ENTRY ----------------
+@app.delete("/entries/{entry_id}")
+def delete_entry(entry_id: int):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM entries WHERE id=?", (entry_id,))
+    conn.commit()
+
+    if cursor.rowcount == 0:
+        conn.close()
+        return {"success": False, "message": "Entry not found"}
+
+    conn.close()
+
+    return {
+        "success": True,
+        "message": "Entry deleted successfully"
+    }
