@@ -3,52 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Hisab Master</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>HisabKitab AI Ultra</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #eef2f3; text-align: center; padding: 20px; color: #333; }
+        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
+        input { width: 90%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; outline: none; }
+        button { background: #007bff; color: white; padding: 12px 25px; border: none; border-radius: 10px; cursor: pointer; width: 95%; font-weight: bold; margin-top: 10px; }
+        button:hover { background: #0056b3; }
+        .entry-item { background: #f9f9f9; padding: 10px; margin: 5px 0; border-radius: 8px; border-left: 5px solid #28a745; text-align: left; }
+    </style>
 </head>
-<body class="bg-slate-900 text-white font-sans p-4">
-    <div class="max-w-md mx-auto">
-        <h1 class="text-3xl font-bold text-blue-400 mb-6 text-center">AI HisabKitab Pro</h1>
+<body>
+    <div class="card">
+        <h2 id="header">HisabKitab Login</h2>
         
-        <div class="bg-slate-800 p-6 rounded-2xl shadow-2xl mb-6 border border-slate-700">
-            <input id="c_name" type="text" placeholder="ग्राहक का नाम" class="w-full mb-4 p-3 rounded-lg bg-slate-700 border-none outline-none">
-            <input id="item" type="text" placeholder="सामान का नाम" class="w-full mb-4 p-3 rounded-lg bg-slate-700 border-none outline-none">
-            <div class="flex gap-2">
-                <input id="qty" type="number" placeholder="मात्रा" class="w-1/2 mb-4 p-3 rounded-lg bg-slate-700 border-none outline-none">
-                <input id="price" type="number" placeholder="दर (Rate)" class="w-1/2 mb-4 p-3 rounded-lg bg-slate-700 border-none outline-none">
-            </div>
-            <button onclick="submitData()" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-bold text-lg transition-all">AI Analysis + Save</button>
+        <div id="auth-section">
+            <input type="text" id="username" placeholder="यूजरनेम">
+            <input type="password" id="password" placeholder="पासवर्ड">
+            <button onclick="handleLogin()">लॉगिन करें</button>
         </div>
 
-        <div id="resultBox" class="hidden bg-slate-800 p-6 rounded-2xl border-l-4 border-green-500">
-            <p id="aiLabel" class="text-sm font-bold tracking-widest text-green-400 mb-2"></p>
-            <pre id="billArea" class="whitespace-pre-wrap text-gray-300 font-mono text-sm mb-4"></pre>
-            <a id="waButton" href="#" target="_blank" class="block w-full text-center bg-green-600 py-3 rounded-lg font-bold">WhatsApp पर भेजें</a>
+        <div id="main-app" style="display:none;">
+            <h3>नया हिसाब जोड़ें</h3>
+            <input type="text" id="item" placeholder="क्या खरीदा? (उदा. दूध)">
+            <input type="number" id="amount" placeholder="कितने रुपये?">
+            <button onclick="saveTransaction()">सेव करें</button>
+            <hr>
+            <h4>आपका पिछला हिसाब</h4>
+            <div id="history-list"></div>
         </div>
     </div>
 
     <script>
-        async function submitData() {
-            const payload = {
-                customer_name: document.getElementById('c_name').value,
-                item: document.getElementById('item').value,
-                quantity: parseFloat(document.getElementById('qty').value),
-                price_per_unit: parseFloat(document.getElementById('price').value)
-            };
+        let userToken = "";
 
-            const res = await fetch('http://localhost:8000/process/', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
+        async function handleLogin() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
             
-            if(data.success) {
-                document.getElementById('resultBox').classList.remove('hidden');
-                document.getElementById('aiLabel').innerText = "AI INSIGHT: " + data.ai_analysis.risk;
-                document.getElementById('billArea').innerText = data.bill;
-                document.getElementById('waButton').href = data.whatsapp_link;
+            // Backend से लॉगिन API कॉल करना
+            const response = await fetch(`/login?username=${user}&password=${pass}`, { method: 'POST' });
+            const data = await response.json();
+
+            if (data.status === "success") {
+                userToken = data.access_token;
+                document.getElementById('auth-section').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+                document.getElementById('header').innerText = "नमस्ते " + user + "!";
+                loadHistory();
+            } else {
+                alert("गलत यूजरनेम या पासवर्ड!");
             }
+        }
+
+        async function saveTransaction() {
+            const item = document.getElementById('item').value;
+            const amount = document.getElementById('amount').value;
+
+            const response = await fetch(`/add_transaction?item=${item}&amount=${amount}&category=General&token=${userToken}`, { method: 'POST' });
+            const data = await response.json();
+
+            if (data.status === "success") {
+                alert("सेव हो गया!");
+                loadHistory();
+            }
+        }
+
+        async function loadHistory() {
+            const response = await fetch(`/get_history?token=${userToken}`);
+            const data = await response.json();
+            const list = document.getElementById('history-list');
+            list.innerHTML = "";
+            data.history.forEach(row => {
+                list.innerHTML += `<div class="entry-item"><b>${row.item}</b>: ₹${row.amount}</div>`;
+            });
         }
     </script>
 </body>
