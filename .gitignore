@@ -1,15 +1,28 @@
-# Python
+# Python Cache
 __pycache__/
 *.pyc
+*.pyo
 
-# Database
+# Database (local only)
 *.db
 *.sqlite3
 
-# Env
-aiapi/
+# Environment
 .env
+.env.*
 
-# Build
+# Logs
+*.log
+
+# Temporary files
+temp*
+*.tmp
+
+# Build files
 build/
 dist/
+*.egg-info/
+
+# OS files
+.DS_Store
+Thumbs.db

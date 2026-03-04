@@ -1,13 +1,29 @@
-import sqlite3
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import sqlite3
+import re
 
-# ---------------- APP ----------------
-app = FastAPI(title="HisabKitab Ultimate AI")
+# ==============================
+# APP INITIALIZATION
+# ==============================
+
+app = FastAPI(title="HisabKitab Pro Ultimate Backend")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 DB_NAME = "hisabkitab_pro.db"
 
-# ---------------- DATABASE INIT ----------------
+# ==============================
+# DATABASE INIT
+# ==============================
+
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
@@ -15,41 +31,59 @@ def init_db():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS entries (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        customer_name TEXT,
-        item TEXT,
-        quantity REAL,
-        price_per_unit REAL,
-        total REAL
+        customer_name TEXT NOT NULL,
+        item TEXT NOT NULL,
+        quantity REAL NOT NULL,
+        price_per_unit REAL NOT NULL,
+        total REAL NOT NULL
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS reminders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        description TEXT,
+        time TEXT NOT NULL
     )
     """)
 
     conn.commit()
     conn.close()
 
-
-# app start होते ही DB बन जाए
 init_db()
 
-# ---------------- AI RISK SCORING ----------------
-def calculate_risk(total_amount: float, quantity: float):
-    if total_amount >= 5000 or quantity >= 50:
-        return "🔴 High Risk"
-    elif total_amount >= 2000:
-        return "🟡 Medium Risk"
-    else:
-        return "🟢 Low Risk"
+# ==============================
+# MODELS
+# ==============================
 
-
-# ---------------- MODEL ----------------
 class HisabEntry(BaseModel):
     customer_name: str
     item: str
     quantity: float
     price_per_unit: float
 
+class Reminder(BaseModel):
+    title: str
+    description: str = ""
+    time: str
 
-# ---------------- SAVE FUNCTION ----------------
-def save_entry(data: HisabEntry, total_amount: float):
+# ==============================
+# HEALTH CHECK
+# ==============================
+
+@app.get("/health")
+def health():
+    return {"status": "Backend running perfectly"}
+
+# ==============================
+# ENTRIES CRUD
+# ==============================
+
+@app.post("/entries")
+def create_entry(data: HisabEntry):
+    total = data.quantity * data.price_per_unit
+
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
 
@@ -61,46 +95,16 @@ def save_entry(data: HisabEntry, total_amount: float):
         data.item,
         data.quantity,
         data.price_per_unit,
-        total_amount
+        total
     ))
 
     conn.commit()
     conn.close()
 
+    return {"success": True, "total": total}
 
-# ---------------- ROOT ----------------
-@app.get("/")
-def root():
-    return {"message": "HisabKitab AI Running 🚀"}
-
-
-# ---------------- CREATE / PROCESS ----------------
-@app.post("/process/")
-def process_entry(data: HisabEntry):
-    total_amount = data.quantity * data.price_per_unit
-    risk_level = calculate_risk(total_amount, data.quantity)
-
-    save_entry(data, total_amount)
-
-    bill_text = (
-        f"📊 OFFICIAL BILL\n"
-        f"👤 ग्राहक: {data.customer_name}\n"
-        f"📦 सामान: {data.item}\n"
-        f"💰 कुल राशि: ₹{total_amount}\n"
-        f"⚠️ Risk Level: {risk_level}"
-    )
-
-    return {
-        "success": True,
-        "total": total_amount,
-        "risk": risk_level,
-        "bill": bill_text
-    }
-
-
-# ---------------- READ ALL ----------------
-@app.get("/entries/")
-def get_all_entries():
+@app.get("/entries")
+def get_entries():
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -111,44 +115,6 @@ def get_all_entries():
 
     return [dict(row) for row in rows]
 
-
-# ---------------- UPDATE ENTRY ----------------
-@app.put("/entries/{entry_id}")
-def update_entry(entry_id: int, data: HisabEntry):
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-
-    total_amount = data.quantity * data.price_per_unit
-
-    cursor.execute("""
-    UPDATE entries
-    SET customer_name=?, item=?, quantity=?, price_per_unit=?, total=?
-    WHERE id=?
-    """, (
-        data.customer_name,
-        data.item,
-        data.quantity,
-        data.price_per_unit,
-        total_amount,
-        entry_id
-    ))
-
-    conn.commit()
-
-    if cursor.rowcount == 0:
-        conn.close()
-        return {"success": False, "message": "Entry not found"}
-
-    conn.close()
-
-    return {
-        "success": True,
-        "message": "Entry updated successfully",
-        "total": total_amount
-    }
-
-
-# ---------------- DELETE ENTRY ----------------
 @app.delete("/entries/{entry_id}")
 def delete_entry(entry_id: int):
     conn = sqlite3.connect(DB_NAME)
@@ -159,11 +125,85 @@ def delete_entry(entry_id: int):
 
     if cursor.rowcount == 0:
         conn.close()
-        return {"success": False, "message": "Entry not found"}
+        raise HTTPException(status_code=404, detail="Entry not found")
 
     conn.close()
+    return {"success": True}
+
+# ==============================
+# AI TEXT ENTRY
+# ==============================
+
+def parse_text(text: str):
+    name_match = re.search(r"([A-Za-z]+)", text)
+    qty_match = re.search(r"(\d+)", text)
+    price_match = re.search(r"₹?(\d+)", text)
+
+    if not (name_match and qty_match and price_match):
+        return None
 
     return {
-        "success": True,
-        "message": "Entry deleted successfully"
+        "customer_name": name_match.group(1),
+        "item": "AI_Item",
+        "quantity": float(qty_match.group(1)),
+        "price_per_unit": float(price_match.group(1))
     }
+
+@app.post("/ai-entry")
+def ai_entry(text: str):
+    parsed = parse_text(text)
+
+    if not parsed:
+        raise HTTPException(status_code=400, detail="AI could not parse text")
+
+    total = parsed["quantity"] * parsed["price_per_unit"]
+
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    INSERT INTO entries (customer_name, item, quantity, price_per_unit, total)
+    VALUES (?, ?, ?, ?, ?)
+    """, (
+        parsed["customer_name"],
+        parsed["item"],
+        parsed["quantity"],
+        parsed["price_per_unit"],
+        total
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return {"success": True, "parsed": parsed, "total": total}
+
+# ==============================
+# REMINDER SYSTEM
+# ==============================
+
+@app.post("/reminders")
+def add_reminder(reminder: Reminder):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "INSERT INTO reminders (title, description, time) VALUES (?, ?, ?)",
+        (reminder.title, reminder.description, reminder.time)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return {"success": True}
+
+@app.get("/reminders")
+def list_reminders():
+    conn = sqlite3.connect(DB_NAME)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM reminders ORDER BY id DESC")
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [dict(row) for row in rows]

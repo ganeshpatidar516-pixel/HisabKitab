@@ -1,19 +1,21 @@
 import sqlite3
+from contextlib import contextmanager
 
-DB_NAME = "hisabkitab.db"
+DATABASE_NAME = "hisabkitab_pro.db"
+
 
 def init_db():
-    conn = sqlite3.connect(DB_NAME)
+
+    conn = sqlite3.connect(DATABASE_NAME)
     cursor = conn.cursor()
 
+    # AI Learning Table
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS entries (
+    CREATE TABLE IF NOT EXISTS ai_products (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        customer_name TEXT,
-        item TEXT,
-        quantity REAL,
-        price_per_unit REAL,
-        total REAL
+        username TEXT,
+        product_name TEXT,
+        usage_count INTEGER DEFAULT 1
     )
     """)
 
@@ -21,14 +23,23 @@ def init_db():
     conn.close()
 
 
-def save_entry(customer_name, item, quantity, price_per_unit, total):
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
+@contextmanager
+def get_db_connection():
+    conn = sqlite3.connect(
+        DATABASE_NAME,
+        check_same_thread=False,
+        timeout=10
+    )
 
-    cursor.execute("""
-    INSERT INTO entries (customer_name, item, quantity, price_per_unit, total)
-    VALUES (?, ?, ?, ?, ?)
-    """, (customer_name, item, quantity, price_per_unit, total))
+    conn.execute("PRAGMA journal_mode=WAL;")
+    conn.execute("PRAGMA foreign_keys = ON;")
+    conn.row_factory = sqlite3.Row
 
-    conn.commit()
-    conn.close()
+    try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
