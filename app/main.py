@@ -5,6 +5,7 @@ from app.api.v1.api import api_router
 from app.core.database import init_db
 
 app = FastAPI(
+from app.api.sync_api import router as sync_router
     title="HisabKitab Pro Ultra Backend",
     description="Ultra Professional AI-Powered Billing Backend",
     version="1.0.0"
@@ -18,6 +19,7 @@ def startup_event():
 
 # API Router
 app.include_router(api_router, prefix="/api/v1")
+app.include_router(sync_router)
 
 
 # Custom Swagger JWT Authorize Button

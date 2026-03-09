@@ -7,9 +7,15 @@ __pycache__/
 *.db
 *.sqlite3
 
-# Environment
+# Environment files
 .env
 .env.*
+
+# Virtual Environment
+aiapi/bin/
+aiapi/lib/
+aiapi/include/
+aiapi/pyvenv.cfg
 
 # Logs
 *.log
