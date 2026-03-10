@@ -4,3 +4,5 @@ uvicorn
 pydantic
 requests
 python-jose[cryptography]
+pytesseract
+Pillow
