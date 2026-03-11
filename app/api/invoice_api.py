@@ -15,10 +15,10 @@ class InvoiceRequest(BaseModel):
 def create_invoice(data: InvoiceRequest):
 
     invoice = generate_invoice(
-        customer_name=data.customer_name,
-        amount=data.amount,
-        note=data.note
-    )
+    customer_name=data.customer_name,
+    total=data.amount,
+    note=data.note
+)
 
     return {
         "status": "success",
