@@ -8,3 +8,4 @@ SpeechRecognition
 pytesseract
 Pillow
 python-multipart
+reportlab
