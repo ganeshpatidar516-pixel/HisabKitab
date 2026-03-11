@@ -10,3 +10,4 @@ Pillow
 python-multipart
 reportlab
 qrcode[pil]
+qrcode
