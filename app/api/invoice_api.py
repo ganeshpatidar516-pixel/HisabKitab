@@ -14,9 +14,9 @@ class InvoiceRequest(BaseModel):
 @router.post("/invoice/create")
 def create_invoice(data: InvoiceRequest):
 
-    invoice = generate_invoice(
+ invoice = generate_invoice(
     customer_name=data.customer_name,
-    total=data.amount,
+    amount=data.amount,
     note=data.note
 )
 
