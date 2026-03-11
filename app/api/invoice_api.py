@@ -1,6 +1,10 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
+from fastapi.responses import FileResponse
+import os
+
 from app.services.invoice_service import generate_invoice
+
 
 router = APIRouter()
 
@@ -14,19 +18,17 @@ class InvoiceRequest(BaseModel):
 @router.post("/invoice/create")
 def create_invoice(data: InvoiceRequest):
 
- invoice = generate_invoice(
-    customer_name=data.customer_name,
-    amount=data.amount,
-    note=data.note
-)
+    invoice = generate_invoice(
+        customer_name=data.customer_name,
+        amount=data.amount,
+        note=data.note
+    )
 
     return {
         "status": "success",
         "invoice_id": invoice["invoice_id"],
         "file_path": invoice["file_path"]
     }
-from fastapi.responses import FileResponse
-import os
 
 
 @router.get("/invoice/download/{invoice_id}")
