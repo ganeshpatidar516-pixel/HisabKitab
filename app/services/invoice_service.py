@@ -5,11 +5,38 @@ from datetime import datetime
 import os
 import qrcode
 
+from database import get_db_connection
+
 INVOICE_DIR = "invoices"
 
 BUSINESS_NAME = "HisabKitab Store"
 GST_NUMBER = "22AAAAA0000A1Z5"
 UPI_ID = "ganesh@upi"
+
+
+def get_business_settings(username):
+
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT * FROM business_settings WHERE username=?",
+            (username,)
+        )
+
+        row = cursor.fetchone()
+
+        if not row:
+            return {
+                "business_name": "My Store",
+                "gst_number": "",
+                "phone": "",
+                "address": "",
+                "logo": "",
+                "default_template": "1"
+            }
+
+        return dict(row)
 
 
 def generate_invoice(customer_name, items, note="", template="1", apply_gst=False):
@@ -20,10 +47,8 @@ def generate_invoice(customer_name, items, note="", template="1", apply_gst=Fals
     invoice_id = f"INV-{int(datetime.now().timestamp())}"
     file_path = f"{INVOICE_DIR}/{invoice_id}.pdf"
 
-    # -------------------------
-    # Calculate subtotal
-    # -------------------------
     amount = 0
+
     for item in items:
         amount += item.qty * item.price
 
@@ -34,9 +59,6 @@ def generate_invoice(customer_name, items, note="", template="1", apply_gst=Fals
         gst = amount * 0.18
         total = amount + gst
 
-    # -------------------------
-    # QR Code
-    # -------------------------
     qr_data = f"upi://pay?pa={UPI_ID}&pn=HisabKitab&am={total}"
     qr = qrcode.make(qr_data)
 
@@ -45,9 +67,6 @@ def generate_invoice(customer_name, items, note="", template="1", apply_gst=Fals
 
     c = canvas.Canvas(file_path, pagesize=A4)
 
-    # -------------------------
-    # Template Router
-    # -------------------------
     template_map = {
         "1": draw_template_1,
         "2": draw_template_2,
@@ -83,10 +102,6 @@ def generate_invoice(customer_name, items, note="", template="1", apply_gst=Fals
     }
 
 
-# -----------------------------------
-# TEMPLATE 1 (Professional Layout)
-# -----------------------------------
-
 def draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr):
 
     c.setFont("Helvetica-Bold", 22)
@@ -113,6 +128,7 @@ def draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr
     c.setFont("Helvetica", 11)
 
     for item in items:
+
         item_total = item.qty * item.price
 
         c.drawString(50, y, item.name)
@@ -138,38 +154,42 @@ def draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr
     y -= 20
 
     c.setFont("Helvetica-Bold", 14)
-
     c.drawString(320, y, f"Total : ₹{total}")
 
     c.drawImage(qr, 400, 740, width=100, height=100)
 
 
-# बाकी templates अभी simple रखें
-# ताकि system break न हो
-
 def draw_template_2(c, customer, items, amount, gst, total, note, invoice_id, qr):
     draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr)
+
 
 def draw_template_3(c, customer, items, amount, gst, total, note, invoice_id, qr):
     draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr)
 
+
 def draw_template_4(c, customer, items, amount, gst, total, note, invoice_id, qr):
     draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr)
+
 
 def draw_template_5(c, customer, items, amount, gst, total, note, invoice_id, qr):
     draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr)
 
+
 def draw_template_6(c, customer, items, amount, gst, total, note, invoice_id, qr):
     draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr)
+
 
 def draw_template_7(c, customer, items, amount, gst, total, note, invoice_id, qr):
     draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr)
 
+
 def draw_template_8(c, customer, items, amount, gst, total, note, invoice_id, qr):
     draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr)
 
+
 def draw_template_9(c, customer, items, amount, gst, total, note, invoice_id, qr):
     draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr)
+
 
 def draw_template_10(c, customer, items, amount, gst, total, note, invoice_id, qr):
     draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr)
