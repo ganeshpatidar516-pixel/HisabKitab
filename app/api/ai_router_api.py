@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from ai.router import route_message
+from ai.ai_execute import execute_action
 
 router = APIRouter()
 
@@ -23,8 +24,11 @@ def ai_router(data: AICommand):
     intent = routed["intent"]
     entities = routed["entities"]
 
+    # AI action execute
+    result = execute_action(intent, entities)
+
     return {
         "intent": intent,
         "entities": entities,
-        "original_message": data.message
+        "result": result
     }
