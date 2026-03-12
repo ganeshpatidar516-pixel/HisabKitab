@@ -25,6 +25,7 @@ from app.api.ai_learning_api import router as ai_learning_router
 from app.routes import business_settings
 from app.routes import invoice_api
 from app.routes.invoice_routes import router as invoice_router
+from app.routes.ai_invoice_routes import router as ai_invoice_router
 
 # NEW AI COMMAND ROUTER
 from api.ai_router import router as ai_command_router
@@ -65,6 +66,7 @@ app.include_router(ai_learning_router)
 app.include_router(business_settings.router)
 app.include_router(invoice_api.router)
 app.include_router(invoice_router)
+app.include_router(ai_invoice_router)
 
 # NEW AI COMMAND ROUTER
 app.include_router(ai_command_router)
