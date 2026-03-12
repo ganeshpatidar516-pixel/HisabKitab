@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 from fastapi.responses import FileResponse
+from typing import List
 import os
 
 from app.services.invoice_service import generate_invoice
@@ -8,7 +9,6 @@ from app.services.invoice_service import generate_invoice
 router = APIRouter()
 
 
-# Product item structure
 class Item(BaseModel):
     name: str
     qty: float
@@ -17,9 +17,8 @@ class Item(BaseModel):
 
 class InvoiceRequest(BaseModel):
     customer_name: str
-    items: list[Item] = []     # future product table support
-    amount: float              # fallback single amount
     note: str = ""
+    items: List[Item]
     template: str = "1"
     apply_gst: bool = False
 
@@ -29,7 +28,7 @@ def create_invoice(data: InvoiceRequest):
 
     invoice = generate_invoice(
         customer_name=data.customer_name,
-        amount=data.amount,
+        items=data.items,
         note=data.note,
         template=data.template,
         apply_gst=data.apply_gst

@@ -12,13 +12,21 @@ GST_NUMBER = "22AAAAA0000A1Z5"
 UPI_ID = "ganesh@upi"
 
 
-def generate_invoice(customer_name, amount, note="", template="1", apply_gst=False):
+def generate_invoice(customer_name, items, note="", template="1", apply_gst=False):
 
     if not os.path.exists(INVOICE_DIR):
         os.makedirs(INVOICE_DIR)
 
     invoice_id = f"INV-{int(datetime.now().timestamp())}"
     file_path = f"{INVOICE_DIR}/{invoice_id}.pdf"
+
+    # -------------------------
+    # Calculate subtotal from items
+    # -------------------------
+    amount = 0
+
+    for item in items:
+        amount += item.qty * item.price
 
     gst = 0
     total = amount
@@ -27,8 +35,11 @@ def generate_invoice(customer_name, amount, note="", template="1", apply_gst=Fal
         gst = amount * 0.18
         total = amount + gst
 
+    # -------------------------
     # QR code
+    # -------------------------
     qr_data = f"upi://pay?pa={UPI_ID}&pn=HisabKitab&am={total}"
+
     qr = qrcode.make(qr_data)
 
     qr_path = f"{INVOICE_DIR}/{invoice_id}_qr.png"
@@ -36,7 +47,9 @@ def generate_invoice(customer_name, amount, note="", template="1", apply_gst=Fal
 
     c = canvas.Canvas(file_path, pagesize=A4)
 
-    # template router
+    # -------------------------
+    # Template Router
+    # -------------------------
     template_map = {
         "1": draw_template_1,
         "2": draw_template_2,
@@ -85,6 +98,7 @@ def draw_template_1(c, customer, amount, gst, total, note, invoice_id, qr):
     c.drawString(50, 700, f"Note: {note}")
 
     c.setFont("Helvetica-Bold", 14)
+
     c.drawString(50, 650, f"Amount: ₹{amount}")
     c.drawString(50, 630, f"GST: ₹{gst}")
     c.drawString(50, 610, f"Total: ₹{total}")
@@ -103,6 +117,7 @@ def draw_template_2(c, customer, amount, gst, total, note, invoice_id, qr):
     c.drawString(50, 790, BUSINESS_NAME)
 
     c.setFillColor(HexColor("#000000"))
+
     c.setFont("Helvetica", 11)
 
     c.drawString(50, 720, f"Invoice: {invoice_id}")
@@ -122,6 +137,7 @@ def draw_template_3(c, customer, amount, gst, total, note, invoice_id, qr):
     c.drawString(200, 800, "INVOICE")
 
     c.setFont("Courier", 12)
+
     c.drawString(50, 760, f"Business: {BUSINESS_NAME}")
     c.drawString(50, 740, f"Customer: {customer}")
 
@@ -157,6 +173,7 @@ def draw_template_5(c, customer, amount, gst, total, note, invoice_id, qr):
     c.rect(0, 760, 600, 80, fill=1)
 
     c.setFillColor(HexColor("#FFFFFF"))
+
     c.setFont("Helvetica-Bold", 22)
     c.drawString(50, 790, BUSINESS_NAME)
 
@@ -215,6 +232,7 @@ def draw_template_8(c, customer, amount, gst, total, note, invoice_id, qr):
     c.setFont("Helvetica", 11)
 
     c.drawString(50, 780, f"GSTIN : {GST_NUMBER}")
+
     c.drawString(50, 740, f"Customer : {customer}")
 
     c.drawString(50, 700, f"Amount ₹{amount}")
@@ -231,6 +249,7 @@ def draw_template_9(c, customer, amount, gst, total, note, invoice_id, qr):
     c.rect(0, 760, 600, 80, fill=1)
 
     c.setFillColor(HexColor("#FFFFFF"))
+
     c.setFont("Helvetica-Bold", 20)
     c.drawString(50, 790, BUSINESS_NAME)
 
