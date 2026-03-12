@@ -8,12 +8,20 @@ from app.services.invoice_service import generate_invoice
 router = APIRouter()
 
 
+# Product item structure
+class Item(BaseModel):
+    name: str
+    qty: float
+    price: float
+
+
 class InvoiceRequest(BaseModel):
     customer_name: str
-    amount: float
+    items: list[Item] = []     # future product table support
+    amount: float              # fallback single amount
     note: str = ""
-    template: str = "1"      # template selection
-    apply_gst: bool = False  # GST optional
+    template: str = "1"
+    apply_gst: bool = False
 
 
 @router.post("/invoice/create")
@@ -46,5 +54,4 @@ def download_invoice(invoice_id: str):
         path=file_path,
         filename=f"{invoice_id}.pdf",
         media_type="application/pdf"
-    )	
-
+    )
