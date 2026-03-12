@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from database import get_db_connection
+from app.ai.business_advisor_ai import business_advisor
 
 router = APIRouter()
 
@@ -53,3 +54,7 @@ def business_insights(username: str):
             } for row in top_customers
         ]
     }
+
+@router.get("/ai/business/advisor")
+def advisor():
+    return business_advisor()
