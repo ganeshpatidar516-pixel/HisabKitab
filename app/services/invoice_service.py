@@ -21,10 +21,9 @@ def generate_invoice(customer_name, items, note="", template="1", apply_gst=Fals
     file_path = f"{INVOICE_DIR}/{invoice_id}.pdf"
 
     # -------------------------
-    # Calculate subtotal from items
+    # Calculate subtotal
     # -------------------------
     amount = 0
-
     for item in items:
         amount += item.qty * item.price
 
@@ -36,10 +35,9 @@ def generate_invoice(customer_name, items, note="", template="1", apply_gst=Fals
         total = amount + gst
 
     # -------------------------
-    # QR code
+    # QR Code
     # -------------------------
     qr_data = f"upi://pay?pa={UPI_ID}&pn=HisabKitab&am={total}"
-
     qr = qrcode.make(qr_data)
 
     qr_path = f"{INVOICE_DIR}/{invoice_id}_qr.png"
@@ -68,6 +66,7 @@ def generate_invoice(customer_name, items, note="", template="1", apply_gst=Fals
     template_function(
         c,
         customer_name,
+        items,
         amount,
         gst,
         total,
@@ -84,200 +83,93 @@ def generate_invoice(customer_name, items, note="", template="1", apply_gst=Fals
     }
 
 
-# TEMPLATE 1
-def draw_template_1(c, customer, amount, gst, total, note, invoice_id, qr):
+# -----------------------------------
+# TEMPLATE 1 (Professional Layout)
+# -----------------------------------
 
-    c.setFont("Helvetica-Bold", 18)
+def draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr):
+
+    c.setFont("Helvetica-Bold", 22)
     c.drawString(50, 800, BUSINESS_NAME)
 
     c.setFont("Helvetica", 11)
-    c.drawString(50, 780, f"GSTIN: {GST_NUMBER}")
+    c.drawString(50, 780, f"GSTIN : {GST_NUMBER}")
 
-    c.drawString(50, 740, f"Invoice No: {invoice_id}")
-    c.drawString(50, 720, f"Customer: {customer}")
-    c.drawString(50, 700, f"Note: {note}")
+    c.drawString(50, 740, f"Invoice : {invoice_id}")
+    c.drawString(50, 720, f"Customer : {customer}")
+    c.drawString(50, 700, f"Note : {note}")
+
+    y = 660
+
+    c.setFont("Helvetica-Bold", 12)
+
+    c.drawString(50, y, "Item")
+    c.drawString(250, y, "Qty")
+    c.drawString(320, y, "Price")
+    c.drawString(420, y, "Total")
+
+    y -= 20
+
+    c.setFont("Helvetica", 11)
+
+    for item in items:
+        item_total = item.qty * item.price
+
+        c.drawString(50, y, item.name)
+        c.drawString(250, y, str(item.qty))
+        c.drawString(320, y, f"₹{item.price}")
+        c.drawString(420, y, f"₹{item_total}")
+
+        y -= 20
+
+    y -= 10
+
+    c.setFont("Helvetica-Bold", 12)
+
+    c.drawString(320, y, f"Subtotal : ₹{amount}")
+
+    y -= 20
+
+    if gst == 0:
+        c.drawString(320, y, "GST : Not Applied")
+    else:
+        c.drawString(320, y, f"GST : ₹{gst}")
+
+    y -= 20
 
     c.setFont("Helvetica-Bold", 14)
 
-    c.drawString(50, 650, f"Amount: ₹{amount}")
-    c.drawString(50, 630, f"GST: ₹{gst}")
-    c.drawString(50, 610, f"Total: ₹{total}")
+    c.drawString(320, y, f"Total : ₹{total}")
 
-    c.drawImage(qr, 400, 650, width=120, height=120)
+    c.drawImage(qr, 400, 740, width=100, height=100)
 
 
-# TEMPLATE 2
-def draw_template_2(c, customer, amount, gst, total, note, invoice_id, qr):
+# बाकी templates अभी simple रखें
+# ताकि system break न हो
 
-    c.setFillColor(HexColor("#2E86C1"))
-    c.rect(0, 760, 600, 80, fill=1)
+def draw_template_2(c, customer, items, amount, gst, total, note, invoice_id, qr):
+    draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr)
 
-    c.setFillColor(HexColor("#FFFFFF"))
-    c.setFont("Helvetica-Bold", 20)
-    c.drawString(50, 790, BUSINESS_NAME)
+def draw_template_3(c, customer, items, amount, gst, total, note, invoice_id, qr):
+    draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr)
 
-    c.setFillColor(HexColor("#000000"))
+def draw_template_4(c, customer, items, amount, gst, total, note, invoice_id, qr):
+    draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr)
 
-    c.setFont("Helvetica", 11)
+def draw_template_5(c, customer, items, amount, gst, total, note, invoice_id, qr):
+    draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr)
 
-    c.drawString(50, 720, f"Invoice: {invoice_id}")
-    c.drawString(50, 700, f"Customer: {customer}")
+def draw_template_6(c, customer, items, amount, gst, total, note, invoice_id, qr):
+    draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr)
 
-    c.drawString(50, 660, f"Amount: ₹{amount}")
-    c.drawString(50, 640, f"GST: ₹{gst}")
-    c.drawString(50, 620, f"Total: ₹{total}")
+def draw_template_7(c, customer, items, amount, gst, total, note, invoice_id, qr):
+    draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr)
 
-    c.drawImage(qr, 420, 640, width=100, height=100)
+def draw_template_8(c, customer, items, amount, gst, total, note, invoice_id, qr):
+    draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr)
 
+def draw_template_9(c, customer, items, amount, gst, total, note, invoice_id, qr):
+    draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr)
 
-# TEMPLATE 3
-def draw_template_3(c, customer, amount, gst, total, note, invoice_id, qr):
-
-    c.setFont("Courier-Bold", 18)
-    c.drawString(200, 800, "INVOICE")
-
-    c.setFont("Courier", 12)
-
-    c.drawString(50, 760, f"Business: {BUSINESS_NAME}")
-    c.drawString(50, 740, f"Customer: {customer}")
-
-    c.drawString(50, 700, f"Amount: ₹{amount}")
-    c.drawString(50, 680, f"GST: ₹{gst}")
-    c.drawString(50, 660, f"Total: ₹{total}")
-
-    c.drawImage(qr, 420, 640, width=100, height=100)
-
-
-# TEMPLATE 4
-def draw_template_4(c, customer, amount, gst, total, note, invoice_id, qr):
-
-    c.setFont("Helvetica-Bold", 22)
-    c.drawCentredString(300, 800, BUSINESS_NAME)
-
-    c.setFont("Helvetica", 12)
-
-    c.drawString(100, 740, f"Invoice ID: {invoice_id}")
-    c.drawString(100, 720, f"Customer: {customer}")
-
-    c.drawString(100, 680, f"Amount: ₹{amount}")
-    c.drawString(100, 660, f"GST: ₹{gst}")
-    c.drawString(100, 640, f"Total: ₹{total}")
-
-    c.drawImage(qr, 420, 640, width=100, height=100)
-
-
-# TEMPLATE 5
-def draw_template_5(c, customer, amount, gst, total, note, invoice_id, qr):
-
-    c.setFillColor(HexColor("#000000"))
-    c.rect(0, 760, 600, 80, fill=1)
-
-    c.setFillColor(HexColor("#FFFFFF"))
-
-    c.setFont("Helvetica-Bold", 22)
-    c.drawString(50, 790, BUSINESS_NAME)
-
-    c.setFillColor(HexColor("#000000"))
-
-    c.drawString(50, 720, f"Invoice: {invoice_id}")
-    c.drawString(50, 700, f"Customer: {customer}")
-
-    c.drawString(50, 660, f"Amount ₹{amount}")
-    c.drawString(50, 640, f"GST ₹{gst}")
-    c.drawString(50, 620, f"Total ₹{total}")
-
-    c.drawImage(qr, 420, 640, width=100, height=100)
-
-
-# TEMPLATE 6
-def draw_template_6(c, customer, amount, gst, total, note, invoice_id, qr):
-
-    c.setFont("Helvetica-Bold", 20)
-    c.drawCentredString(300, 800, BUSINESS_NAME)
-
-    c.setFont("Helvetica", 12)
-
-    c.drawString(50, 740, f"Bill No : {invoice_id}")
-    c.drawString(50, 720, f"Customer : {customer}")
-
-    c.drawString(50, 680, f"Subtotal ₹{amount}")
-    c.drawString(50, 660, f"GST ₹{gst}")
-    c.drawString(50, 640, f"Grand Total ₹{total}")
-
-    c.drawImage(qr, 420, 640, width=100, height=100)
-
-
-# TEMPLATE 7
-def draw_template_7(c, customer, amount, gst, total, note, invoice_id, qr):
-
-    c.setFont("Helvetica-Bold", 18)
-    c.drawString(50, 800, "INVOICE")
-
-    c.setFont("Helvetica", 12)
-
-    c.drawString(50, 760, f"Customer : {customer}")
-    c.drawString(50, 740, f"Invoice ID : {invoice_id}")
-
-    c.drawString(50, 700, f"Total ₹{total}")
-
-    c.drawImage(qr, 420, 640, width=100, height=100)
-
-
-# TEMPLATE 8
-def draw_template_8(c, customer, amount, gst, total, note, invoice_id, qr):
-
-    c.setFont("Helvetica-Bold", 18)
-    c.drawString(50, 800, BUSINESS_NAME)
-
-    c.setFont("Helvetica", 11)
-
-    c.drawString(50, 780, f"GSTIN : {GST_NUMBER}")
-
-    c.drawString(50, 740, f"Customer : {customer}")
-
-    c.drawString(50, 700, f"Amount ₹{amount}")
-    c.drawString(50, 680, f"GST ₹{gst}")
-    c.drawString(50, 660, f"Total ₹{total}")
-
-    c.drawImage(qr, 420, 640, width=100, height=100)
-
-
-# TEMPLATE 9
-def draw_template_9(c, customer, amount, gst, total, note, invoice_id, qr):
-
-    c.setFillColor(HexColor("#004AAD"))
-    c.rect(0, 760, 600, 80, fill=1)
-
-    c.setFillColor(HexColor("#FFFFFF"))
-
-    c.setFont("Helvetica-Bold", 20)
-    c.drawString(50, 790, BUSINESS_NAME)
-
-    c.setFillColor(HexColor("#000000"))
-
-    c.drawString(50, 720, f"Invoice {invoice_id}")
-    c.drawString(50, 700, f"Customer {customer}")
-
-    c.drawString(50, 660, f"Total ₹{total}")
-
-    c.drawImage(qr, 420, 640, width=100, height=100)
-
-
-# TEMPLATE 10
-def draw_template_10(c, customer, amount, gst, total, note, invoice_id, qr):
-
-    c.setFont("Helvetica-Bold", 24)
-    c.drawCentredString(300, 800, "PREMIUM INVOICE")
-
-    c.setFont("Helvetica", 12)
-
-    c.drawCentredString(300, 770, BUSINESS_NAME)
-
-    c.drawString(100, 720, f"Customer : {customer}")
-    c.drawString(100, 700, f"Invoice ID : {invoice_id}")
-
-    c.drawString(100, 660, f"Amount ₹{amount}")
-    c.drawString(100, 640, f"GST ₹{gst}")
-    c.drawString(100, 620, f"Final ₹{total}")
-
-    c.drawImage(qr, 420, 640, width=100, height=100)
+def draw_template_10(c, customer, items, amount, gst, total, note, invoice_id, qr):
+    draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr)
