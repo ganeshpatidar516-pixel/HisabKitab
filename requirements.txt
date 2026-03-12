@@ -12,3 +12,4 @@ reportlab
 qrcode[pil]
 qrcode
 rapidfuzz
+pydub
