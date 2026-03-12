@@ -23,6 +23,7 @@ from app.api.ai_action_api import router as ai_action_router
 from app.api.ai_voice_control_api import router as ai_voice_router
 from app.api.ai_learning_api import router as ai_learning_router
 from app.routes import business_settings
+from app.routes import invoice_api
 
 # NEW AI COMMAND ROUTER
 from api.ai_router import router as ai_command_router
@@ -61,6 +62,7 @@ app.include_router(ai_action_router)
 app.include_router(ai_voice_router)
 app.include_router(ai_learning_router)
 app.include_router(business_settings.router)
+app.include_router(invoice_api.router)
 
 # NEW AI COMMAND ROUTER
 app.include_router(ai_command_router)
