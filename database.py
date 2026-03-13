@@ -1,164 +1,70 @@
-import sqlite3
-from contextlib import contextmanager
+from fastapi import APIRouter
+from pydantic import BaseModel
+from database import get_db_connection
 
-DATABASE_NAME = "hisabkitab_pro.db"
-
-
-def init_db():
-    conn = sqlite3.connect(DATABASE_NAME)
-    cursor = conn.cursor()
-
-    # ================= USERS =================
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE,
-        password TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    """)
-
-    cursor.execute("""
-    CREATE INDEX IF NOT EXISTS idx_users_username
-    ON users(username)
-    """)
-
-    # ================= CUSTOMERS =================
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS customers (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT,
-        name TEXT,
-        phone TEXT,
-        address TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    """)
-
-    cursor.execute("""
-    CREATE INDEX IF NOT EXISTS idx_customers_username
-    ON customers(username)
-    """)
-
-    # ================= LEDGER ENTRIES =================
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS entries (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT,
-        customer_id INTEGER,
-        type TEXT,
-        amount REAL,
-        note TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(customer_id) REFERENCES customers(id)
-    )
-    """)
-
-    cursor.execute("""
-    CREATE INDEX IF NOT EXISTS idx_entries_customer
-    ON entries(customer_id)
-    """)
-
-    cursor.execute("""
-    CREATE INDEX IF NOT EXISTS idx_entries_username
-    ON entries(username)
-    """)
-
-    # ================= REMINDERS =================
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS reminders (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT,
-        customer_id INTEGER,
-        message TEXT,
-        remind_date TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    """)
-
-    cursor.execute("""
-    CREATE INDEX IF NOT EXISTS idx_reminders_username
-    ON reminders(username)
-    """)
-
-    # ================= AI LEARNING =================
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS ai_products (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT,
-        product_name TEXT,
-        usage_count INTEGER DEFAULT 1,
-        last_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    """)
-
-    cursor.execute("""
-    CREATE INDEX IF NOT EXISTS idx_ai_products_username
-    ON ai_products(username)
-    """)
-
-    # ================= BUSINESS ANALYTICS =================
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS business_insights (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT,
-        insight_type TEXT,
-        value TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    """)
-
-    cursor.execute("""
-    CREATE INDEX IF NOT EXISTS idx_insights_username
-    ON business_insights(username)
-    """)
-
-    # ================= BUSINESS SETTINGS =================
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS business_settings (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT,
-        business_name TEXT,
-        gst_number TEXT,
-        phone TEXT,
-        address TEXT,
-        logo TEXT,
-        default_template TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP
-    )
-    """)
-
-    cursor.execute("""
-    CREATE INDEX IF NOT EXISTS idx_business_settings_username
-    ON business_settings(username)
-    """)
-
-    conn.commit()
-    conn.close()
+router = APIRouter()
 
 
-@contextmanager
-def get_db_connection():
+class LedgerEntry(BaseModel):
+    username: str
+    customer_id: int
+    type: str
+    amount: float
+    note: str = ""
 
-    conn = sqlite3.connect(
-        DATABASE_NAME,
-        check_same_thread=False,
-        timeout=10
-    )
 
-    conn.execute("PRAGMA journal_mode=WAL;")
-    conn.execute("PRAGMA foreign_keys = ON;")
+@router.post("/ledger/add")
+def add_entry(data: LedgerEntry):
 
-    conn.row_factory = sqlite3.Row
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
 
-    try:
-        yield conn
-        conn.commit()
+        cursor.execute("""
+        INSERT INTO entries (username, customer_id, type, amount, note)
+        VALUES (?, ?, ?, ?, ?)
+        """, (
+            data.username,
+            data.customer_id,
+            data.type,
+            data.amount,
+            data.note
+        ))
 
-    except Exception:
-        conn.rollback()
-        raise
+    return {"success": True}
 
-    finally:
-        conn.close()
+
+@router.get("/ledger/customer/{customer_id}")
+def customer_ledger(customer_id: int):
+
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+
+        cursor.execute("""
+        SELECT * FROM entries
+        WHERE customer_id=?
+        ORDER BY created_at DESC
+        """, (customer_id,))
+
+        rows = cursor.fetchall()
+
+    return [dict(row) for row in rows]
+
+
+@router.get("/ledger/balance/{customer_id}")
+def customer_balance(customer_id: int):
+
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+
+        cursor.execute("""
+        SELECT
+        SUM(CASE WHEN type='credit' THEN amount ELSE 0 END) -
+        SUM(CASE WHEN type='debit' THEN amount ELSE 0 END)
+        as balance
+        FROM entries
+        WHERE customer_id=?
+        """, (customer_id,))
+
+        result = cursor.fetchone()
+
+    return {"balance": result["balance"] or 0}
