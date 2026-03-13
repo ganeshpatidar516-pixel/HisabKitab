@@ -1,70 +1,35 @@
-from fastapi import APIRouter
-from pydantic import BaseModel
-from database import get_db_connection
+import sqlite3
+import os
 
-router = APIRouter()
-
-
-class LedgerEntry(BaseModel):
-    username: str
-    customer_id: int
-    type: str
-    amount: float
-    note: str = ""
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "hisabkitab_pro.db")
 
 
-@router.post("/ledger/add")
-def add_entry(data: LedgerEntry):
-
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
-
-        cursor.execute("""
-        INSERT INTO entries (username, customer_id, type, amount, note)
-        VALUES (?, ?, ?, ?, ?)
-        """, (
-            data.username,
-            data.customer_id,
-            data.type,
-            data.amount,
-            data.note
-        ))
-
-    return {"success": True}
+def get_db_connection():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 
-@router.get("/ledger/customer/{customer_id}")
-def customer_ledger(customer_id: int):
+def init_database():
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS entries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT,
+        customer_id INTEGER,
+        type TEXT,
+        amount REAL,
+        note TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
 
-        cursor.execute("""
-        SELECT * FROM entries
-        WHERE customer_id=?
-        ORDER BY created_at DESC
-        """, (customer_id,))
-
-        rows = cursor.fetchall()
-
-    return [dict(row) for row in rows]
+    conn.commit()
+    conn.close()
 
 
-@router.get("/ledger/balance/{customer_id}")
-def customer_balance(customer_id: int):
-
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
-
-        cursor.execute("""
-        SELECT
-        SUM(CASE WHEN type='credit' THEN amount ELSE 0 END) -
-        SUM(CASE WHEN type='debit' THEN amount ELSE 0 END)
-        as balance
-        FROM entries
-        WHERE customer_id=?
-        """, (customer_id,))
-
-        result = cursor.fetchone()
-
-    return {"balance": result["balance"] or 0}
+# database auto initialize
+init_database()
