@@ -63,6 +63,22 @@ def draw_business_header(c):
 
 
 # =========================
+# DRAW TABLE HEADER
+# =========================
+
+def draw_table_header(c):
+
+    c.setFont("Helvetica-Bold", 11)
+
+    c.drawString(50, 680, "Item")
+    c.drawString(250, 680, "Qty")
+    c.drawString(320, 680, "Price")
+    c.drawString(400, 680, "Total")
+
+    c.line(50, 675, 500, 675)
+
+
+# =========================
 # TEMPLATE 1
 # =========================
 
@@ -74,15 +90,11 @@ def draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr
     c.drawString(250, 820, "INVOICE")
 
     c.setFont("Helvetica", 11)
-    c.drawString(50, 760, f"Invoice : {invoice_id}")
-    c.drawString(50, 740, f"Customer : {customer}")
-    c.drawString(50, 720, f"Note : {note}")
+    c.drawString(50, 750, f"Invoice : {invoice_id}")
+    c.drawString(50, 730, f"Customer : {customer}")
+    c.drawString(50, 710, f"Note : {note}")
 
-    c.setFont("Helvetica-Bold", 11)
-    c.drawString(50, 680, "Item")
-    c.drawString(250, 680, "Qty")
-    c.drawString(300, 680, "Price")
-    c.drawString(380, 680, "Total")
+    draw_table_header(c)
 
     y = 650
 
@@ -90,13 +102,14 @@ def draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr
 
         item_total = item.qty * item.price
 
-        c.setFont("Helvetica", 11)
         c.drawString(50, y, item.name)
         c.drawString(250, y, str(item.qty))
-        c.drawString(300, y, str(item.price))
-        c.drawString(380, y, str(item_total))
+        c.drawString(320, y, str(item.price))
+        c.drawString(400, y, str(item_total))
 
         y -= 20
+
+    c.line(50, y, 500, y)
 
     c.drawString(320, y-20, f"Subtotal : ₹{amount}")
 
@@ -122,10 +135,12 @@ def draw_template_2(c, customer, items, amount, gst, total, note, invoice_id, qr
     c.drawString(220, 820, "INVOICE")
 
     c.setFont("Helvetica", 11)
-    c.drawString(50, 760, f"Invoice : {invoice_id}")
-    c.drawString(50, 740, f"Customer : {customer}")
+    c.drawString(50, 750, f"Invoice : {invoice_id}")
+    c.drawString(50, 730, f"Customer : {customer}")
 
-    y = 700
+    draw_table_header(c)
+
+    y = 650
 
     for item in items:
 
@@ -133,10 +148,12 @@ def draw_template_2(c, customer, items, amount, gst, total, note, invoice_id, qr
 
         c.drawString(50, y, item.name)
         c.drawString(250, y, str(item.qty))
-        c.drawString(300, y, str(item.price))
-        c.drawString(380, y, str(item_total))
+        c.drawString(320, y, str(item.price))
+        c.drawString(400, y, str(item_total))
 
         y -= 20
+
+    c.line(50, y, 500, y)
 
     c.drawString(350, y-20, f"Subtotal : ₹{amount}")
 
@@ -165,16 +182,22 @@ def draw_template_3(c, customer, items, amount, gst, total, note, invoice_id, qr
     c.drawString(50, 770, f"Invoice ID : {invoice_id}")
     c.drawString(50, 750, f"Customer : {customer}")
 
-    y = 710
+    draw_table_header(c)
+
+    y = 650
 
     for item in items:
 
         item_total = item.qty * item.price
 
-        c.drawString(50, y, f"{item.name} x {item.qty}")
-        c.drawString(250, y, f"₹{item_total}")
+        c.drawString(50, y, item.name)
+        c.drawString(250, y, str(item.qty))
+        c.drawString(320, y, str(item.price))
+        c.drawString(400, y, str(item_total))
 
         y -= 20
+
+    c.line(50, y, 500, y)
 
     c.drawString(50, y-20, f"Subtotal : ₹{amount}")
 
@@ -189,7 +212,7 @@ def draw_template_3(c, customer, items, amount, gst, total, note, invoice_id, qr
 
 
 # =========================
-# MAIN INVOICE GENERATOR
+# MAIN INVOICE FUNCTION
 # =========================
 
 def generate_invoice(customer_name, items, note="", template="1", apply_gst=False):
@@ -219,7 +242,6 @@ def generate_invoice(customer_name, items, note="", template="1", apply_gst=Fals
     qr_data = f"upi://pay?pa={UPI_ID}&pn=HisabKitab&am={total}"
 
     qr = qrcode.make(qr_data)
-
     qr.save(qr_path)
 
     c = canvas.Canvas(pdf_path, pagesize=A4)
