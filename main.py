@@ -80,8 +80,7 @@ app.add_middleware(
 
 @app.on_event("startup")
 def startup():
-    
-init_database()
+    init_database()
 
 # =========================
 # ROOT TEST
