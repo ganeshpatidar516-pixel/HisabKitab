@@ -26,7 +26,7 @@ app.mount("/invoices", StaticFiles(directory=INVOICE_DIR), name="invoices")
 # DATABASE INIT
 # =========================
 
-from database import init_db
+from database import init_database
 
 # =========================
 # ROUTERS IMPORT
@@ -80,7 +80,8 @@ app.add_middleware(
 
 @app.on_event("startup")
 def startup():
-    init_db()
+    
+init_database()
 
 # =========================
 # ROOT TEST
