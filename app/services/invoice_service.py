@@ -6,7 +6,12 @@ import qrcode
 
 BUSINESS_NAME = "HisabKitab Pro"
 UPI_ID = "demo@upi"
-INVOICE_DIR = "invoices"
+
+# Project base directory
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Invoice directory
+INVOICE_DIR = os.path.join(BASE_DIR, "invoices")
 
 os.makedirs(INVOICE_DIR, exist_ok=True)
 
@@ -21,7 +26,9 @@ class ItemObj:
 def generate_invoice(customer_name, items, note="", template="1", apply_gst=False):
 
     invoice_id = f"INV-{int(time.time())}"
-    file_path = f"{INVOICE_DIR}/{invoice_id}.pdf"
+
+    pdf_path = os.path.join(INVOICE_DIR, f"{invoice_id}.pdf")
+    qr_path = os.path.join(INVOICE_DIR, f"{invoice_id}_qr.png")
 
     # Convert items
     item_objects = []
@@ -33,21 +40,19 @@ def generate_invoice(customer_name, items, note="", template="1", apply_gst=Fals
     for item in item_objects:
         amount += item.qty * item.price
 
-    # GST logic (optional)
     gst = 0
     if apply_gst:
         gst = amount * 0.18
 
     total = amount + gst
 
-    # QR
+    # QR code
     qr_data = f"upi://pay?pa={UPI_ID}&pn=HisabKitab&am={total}"
     qr = qrcode.make(qr_data)
-    qr_path = f"{INVOICE_DIR}/{invoice_id}_qr.png"
     qr.save(qr_path)
 
     # Create PDF
-    c = canvas.Canvas(file_path, pagesize=A4)
+    c = canvas.Canvas(pdf_path, pagesize=A4)
 
     template_map = {
         "1": draw_template_1,
@@ -73,7 +78,7 @@ def generate_invoice(customer_name, items, note="", template="1", apply_gst=Fals
 
     return {
         "invoice_id": invoice_id,
-        "file_path": file_path
+        "file_path": f"invoices/{invoice_id}.pdf"
     }
 
 
