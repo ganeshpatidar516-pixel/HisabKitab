@@ -8,10 +8,6 @@ from reportlab.lib.pagesizes import A4
 from database import get_db_connection
 
 
-# =========================
-# PATH SETUP
-# =========================
-
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 INVOICE_DIR = os.path.join(BASE_DIR, "invoices")
 
@@ -19,12 +15,13 @@ os.makedirs(INVOICE_DIR, exist_ok=True)
 
 
 # =========================
-# LOAD BUSINESS SETTINGS
+# BUSINESS SETTINGS
 # =========================
 
 def load_business_settings(username):
 
     with get_db_connection() as conn:
+
         cursor = conn.cursor()
 
         cursor.execute(
@@ -62,10 +59,10 @@ class ItemObj:
 
 
 # =========================
-# BUSINESS HEADER
+# HEADER
 # =========================
 
-def draw_business_header(c, settings):
+def draw_header(c, settings):
 
     name = settings.get("business_name", "")
     phone = settings.get("phone", "")
@@ -94,22 +91,6 @@ def draw_business_header(c, settings):
 
 
 # =========================
-# TABLE HEADER
-# =========================
-
-def draw_table_header(c):
-
-    c.setFont("Helvetica-Bold", 11)
-
-    c.drawString(50, 680, "Item")
-    c.drawString(250, 680, "Qty")
-    c.drawString(320, 680, "Price")
-    c.drawString(400, 680, "Total")
-
-    c.line(50, 675, 500, 675)
-
-
-# =========================
 # FOOTER
 # =========================
 
@@ -122,12 +103,12 @@ def draw_footer(c):
 
 
 # =========================
-# TEMPLATE 1
+# TEMPLATE 1 (RETAIL)
 # =========================
 
-def draw_template_1(c, settings, customer, items, amount, gst, total, note, invoice_id, qr):
+def template_retail(c, settings, customer, items, amount, gst, total, note, invoice_id, qr):
 
-    draw_business_header(c, settings)
+    draw_header(c, settings)
 
     c.setFont("Helvetica-Bold", 16)
     c.drawString(240, 820, "TAX INVOICE")
@@ -137,12 +118,18 @@ def draw_template_1(c, settings, customer, items, amount, gst, total, note, invo
     c.drawString(50, 750, f"Invoice : {invoice_id}")
     c.drawString(50, 730, f"Customer : {customer}")
 
-    if note:
-        c.drawString(50, 710, f"Note : {note}")
+    y = 680
 
-    draw_table_header(c)
+    c.setFont("Helvetica-Bold", 11)
 
-    y = 650
+    c.drawString(50, y, "Item")
+    c.drawString(250, y, "Qty")
+    c.drawString(320, y, "Price")
+    c.drawString(400, y, "Total")
+
+    c.line(50, y-5, 500, y-5)
+
+    y -= 30
 
     for item in items:
 
@@ -159,14 +146,13 @@ def draw_template_1(c, settings, customer, items, amount, gst, total, note, invo
 
     c.drawString(320, y-20, f"Subtotal : ₹{amount}")
 
-    if gst == 0:
-        c.drawString(320, y-40, "GST : Not Applied")
-    else:
+    if gst:
         c.drawString(320, y-40, f"GST : ₹{gst}")
+    else:
+        c.drawString(320, y-40, "GST : Not Applied")
 
     c.drawString(320, y-60, f"Total : ₹{total}")
 
-    c.setFont("Helvetica-Bold", 10)
     c.drawString(450, 860, "Scan & Pay")
 
     c.drawImage(qr, 450, 740, width=100, height=100)
@@ -175,12 +161,85 @@ def draw_template_1(c, settings, customer, items, amount, gst, total, note, invo
 
 
 # =========================
+# TEMPLATE 2 (CLASSIC)
+# =========================
+
+def template_classic(c, settings, customer, items, amount, gst, total, note, invoice_id, qr):
+
+    draw_header(c, settings)
+
+    c.setFont("Helvetica-Bold", 18)
+    c.drawCentredString(300, 820, "TAX INVOICE")
+
+    c.setFont("Helvetica", 11)
+
+    c.drawString(50, 760, f"Invoice ID : {invoice_id}")
+    c.drawString(50, 740, f"Customer : {customer}")
+
+    y = 700
+
+    for item in items:
+
+        item_total = item.qty * item.price
+
+        c.drawString(50, y, item.name)
+        c.drawString(300, y, str(item.qty))
+        c.drawString(350, y, str(item.price))
+        c.drawString(450, y, str(item_total))
+
+        y -= 20
+
+    c.drawString(350, y-20, f"Subtotal : ₹{amount}")
+    c.drawString(350, y-40, f"GST : ₹{gst}")
+    c.drawString(350, y-60, f"Total : ₹{total}")
+
+    c.drawImage(qr, 450, 740, width=100, height=100)
+
+    draw_footer(c)
+
+
+# =========================
+# TEMPLATE 3 (MINIMAL)
+# =========================
+
+def template_minimal(c, settings, customer, items, amount, gst, total, note, invoice_id, qr):
+
+    draw_header(c, settings)
+
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(50, 800, "Invoice")
+
+    c.drawString(50, 770, f"ID : {invoice_id}")
+    c.drawString(50, 750, f"Customer : {customer}")
+
+    y = 710
+
+    for item in items:
+
+        item_total = item.qty * item.price
+
+        c.drawString(50, y, f"{item.name} x {item.qty}")
+        c.drawString(250, y, f"₹{item_total}")
+
+        y -= 20
+
+    c.drawString(50, y-20, f"Total : ₹{total}")
+
+    c.drawImage(qr, 400, 720, width=120, height=120)
+
+    draw_footer(c)
+
+
+# =========================
 # MAIN INVOICE FUNCTION
 # =========================
 
-def generate_invoice(username, customer_name, items, note="", template="1", apply_gst=False):
+def generate_invoice(username, customer_name, items, note="", template=None, apply_gst=False):
 
     settings = load_business_settings(username)
+
+    if not template:
+        template = settings.get("default_template", "1")
 
     invoice_id = f"INV-{int(time.time())}"
 
@@ -190,21 +249,16 @@ def generate_invoice(username, customer_name, items, note="", template="1", appl
     item_objects = []
 
     for i in items:
-
-        item_objects.append(
-            ItemObj(i["name"], i["qty"], i["price"])
-        )
+        item_objects.append(ItemObj(i["name"], i["qty"], i["price"]))
 
     amount = 0
 
     for item in item_objects:
-
         amount += item.qty * item.price
 
     gst = 0
 
     if apply_gst:
-
         gst = amount * 0.18
 
     total = amount + gst
@@ -212,12 +266,19 @@ def generate_invoice(username, customer_name, items, note="", template="1", appl
     qr_data = f"upi://pay?pa=test@upi&pn=HisabKitab&am={total}"
 
     qr = qrcode.make(qr_data)
-
     qr.save(qr_path)
 
     c = canvas.Canvas(pdf_path, pagesize=A4)
 
-    draw_template_1(
+    templates = {
+        "1": template_retail,
+        "2": template_classic,
+        "3": template_minimal
+    }
+
+    template_func = templates.get(template, template_retail)
+
+    template_func(
         c,
         settings,
         customer_name,
