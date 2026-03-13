@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import sqlite3
@@ -6,6 +7,9 @@ import os
 import uvicorn
 import re
 
+app = FastAPI()
+
+app.mount("/invoices", StaticFiles(directory="invoices"), name="invoices")
 # =============================
 # DATABASE INIT
 # =============================
