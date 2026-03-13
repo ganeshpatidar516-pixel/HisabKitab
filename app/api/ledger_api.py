@@ -5,6 +5,10 @@ from database import get_db_connection
 router = APIRouter()
 
 
+# =============================
+# DATA MODEL
+# =============================
+
 class LedgerEntry(BaseModel):
     username: str
     customer_id: int
@@ -12,6 +16,10 @@ class LedgerEntry(BaseModel):
     amount: float
     note: str = ""
 
+
+# =============================
+# ADD ENTRY
+# =============================
 
 @router.post("/ledger/add")
 def add_entry(data: LedgerEntry):
@@ -30,8 +38,17 @@ def add_entry(data: LedgerEntry):
             data.note
         ))
 
-    return {"success": True}
+        conn.commit()
 
+    return {
+        "status": "success",
+        "message": "Entry added"
+    }
+
+
+# =============================
+# CUSTOMER LEDGER
+# =============================
 
 @router.get("/ledger/customer/{customer_id}")
 def customer_ledger(customer_id: int):
@@ -50,6 +67,10 @@ def customer_ledger(customer_id: int):
     return [dict(row) for row in rows]
 
 
+# =============================
+# CUSTOMER BALANCE
+# =============================
+
 @router.get("/ledger/balance/{customer_id}")
 def customer_balance(customer_id: int):
 
@@ -58,8 +79,8 @@ def customer_balance(customer_id: int):
 
         cursor.execute("""
         SELECT
-        SUM(CASE WHEN type='credit' THEN amount ELSE 0 END) -
-        SUM(CASE WHEN type='debit' THEN amount ELSE 0 END)
+        COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE 0 END),0) -
+        COALESCE(SUM(CASE WHEN type='debit' THEN amount ELSE 0 END),0)
         as balance
         FROM entries
         WHERE customer_id=?
@@ -67,4 +88,6 @@ def customer_balance(customer_id: int):
 
         result = cursor.fetchone()
 
-    return {"balance": result["balance"] or 0}
+    return {
+        "balance": result["balance"]
+    }
