@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+import os
 
 # =========================
 # APP INIT
@@ -13,7 +14,13 @@ app = FastAPI(title="HisabKitab Pro Ultra Backend")
 # STATIC FILES (INVOICES)
 # =========================
 
-app.mount("/invoices", StaticFiles(directory="invoices"), name="invoices")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+INVOICE_DIR = os.path.join(BASE_DIR, "invoices")
+
+if not os.path.exists(INVOICE_DIR):
+    os.makedirs(INVOICE_DIR)
+
+app.mount("/invoices", StaticFiles(directory=INVOICE_DIR), name="invoices")
 
 # =========================
 # DATABASE INIT
@@ -22,7 +29,7 @@ app.mount("/invoices", StaticFiles(directory="invoices"), name="invoices")
 from database import init_db
 
 # =========================
-# ROUTERS
+# ROUTERS IMPORT
 # =========================
 
 from app.api.customer_api import router as customer_router
