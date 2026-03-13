@@ -1,17 +1,17 @@
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
-from datetime import datetime
 import os
+import time
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
 import qrcode
 
+BUSINESS_NAME = "HisabKitab Pro"
+UPI_ID = "demo@upi"
 INVOICE_DIR = "invoices"
 
-BUSINESS_NAME = "HisabKitab Store"
-GST_NUMBER = ""
-UPI_ID = "ganesh@upi"
+os.makedirs(INVOICE_DIR, exist_ok=True)
 
 
-class Item:
+class ItemObj:
     def __init__(self, name, qty, price):
         self.name = name
         self.qty = qty
@@ -20,44 +20,44 @@ class Item:
 
 def generate_invoice(customer_name, items, note="", template="1", apply_gst=False):
 
-    if not os.path.exists(INVOICE_DIR):
-        os.makedirs(INVOICE_DIR)
-
-    invoice_id = f"INV-{int(datetime.now().timestamp())}"
+    invoice_id = f"INV-{int(time.time())}"
     file_path = f"{INVOICE_DIR}/{invoice_id}.pdf"
 
+    # Convert items
     item_objects = []
     for i in items:
-        item_objects.append(Item(i["name"], i["qty"], i["price"]))
+        item_objects.append(ItemObj(i["name"], i["qty"], i["price"]))
 
+    # Calculate subtotal
     amount = 0
     for item in item_objects:
         amount += item.qty * item.price
 
+    # GST logic (optional)
     gst = 0
-    total = amount
-
     if apply_gst:
         gst = amount * 0.18
-        total = amount + gst
 
+    total = amount + gst
+
+    # QR
     qr_data = f"upi://pay?pa={UPI_ID}&pn=HisabKitab&am={total}"
     qr = qrcode.make(qr_data)
-
     qr_path = f"{INVOICE_DIR}/{invoice_id}_qr.png"
     qr.save(qr_path)
 
+    # Create PDF
     c = canvas.Canvas(file_path, pagesize=A4)
 
     template_map = {
         "1": draw_template_1,
         "2": draw_template_2,
-        "3": draw_template_3
+        "3": draw_template_3,
     }
 
-    template_function = template_map.get(template, draw_template_1)
+    template_func = template_map.get(template, draw_template_1)
 
-    template_function(
+    template_func(
         c,
         customer_name,
         item_objects,
@@ -77,7 +77,7 @@ def generate_invoice(customer_name, items, note="", template="1", apply_gst=Fals
     }
 
 
-# ================= TEMPLATE 1 =================
+# ---------------- TEMPLATE 1 ----------------
 
 def draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr):
 
@@ -92,13 +92,12 @@ def draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr
     y = 690
 
     for item in items:
-
         item_total = item.qty * item.price
 
         c.drawString(50, y, item.name)
         c.drawString(250, y, str(item.qty))
-        c.drawString(300, y, f"₹{item.price}")
-        c.drawString(380, y, f"₹{item_total}")
+        c.drawString(300, y, f"{item.price}")
+        c.drawString(380, y, f"{item_total}")
 
         y -= 20
 
@@ -114,7 +113,7 @@ def draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr
     c.drawImage(qr, 450, 750, width=100, height=100)
 
 
-# ================= TEMPLATE 2 =================
+# ---------------- TEMPLATE 2 ----------------
 
 def draw_template_2(c, customer, items, amount, gst, total, note, invoice_id, qr):
 
@@ -128,13 +127,12 @@ def draw_template_2(c, customer, items, amount, gst, total, note, invoice_id, qr
     y = 700
 
     for item in items:
-
         item_total = item.qty * item.price
 
         c.drawString(50, y, item.name)
         c.drawString(300, y, str(item.qty))
-        c.drawString(350, y, f"₹{item.price}")
-        c.drawString(450, y, f"₹{item_total}")
+        c.drawString(350, y, f"{item.price}")
+        c.drawString(450, y, f"{item_total}")
 
         y -= 20
 
@@ -150,7 +148,7 @@ def draw_template_2(c, customer, items, amount, gst, total, note, invoice_id, qr
     c.drawImage(qr, 450, 750, width=100, height=100)
 
 
-# ================= TEMPLATE 3 =================
+# ---------------- TEMPLATE 3 ----------------
 
 def draw_template_3(c, customer, items, amount, gst, total, note, invoice_id, qr):
 
@@ -164,9 +162,10 @@ def draw_template_3(c, customer, items, amount, gst, total, note, invoice_id, qr
     y = 700
 
     for item in items:
-
         item_total = item.qty * item.price
-        c.drawString(50, y, f"{item.name} x {item.qty} = ₹{item_total}")
+
+        c.drawString(50, y, f"{item.name} x {item.qty}")
+        c.drawString(250, y, f"₹{item_total}")
 
         y -= 20
 

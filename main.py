@@ -6,10 +6,15 @@ import os
 import uvicorn
 import re
 
+# =============================
 # DATABASE INIT
+# =============================
 from database import init_db
 
+# =============================
 # ROUTERS
+# =============================
+
 from app.api.customer_api import router as customer_router
 from app.api.ledger_api import router as ledger_router
 from app.api.invoice_api import router as invoice_router
@@ -22,15 +27,20 @@ from app.api.ai_router_api import router as ai_router
 from app.api.ai_action_api import router as ai_action_router
 from app.api.ai_voice_control_api import router as ai_voice_router
 from app.api.ai_learning_api import router as ai_learning_router
+
 from app.routes import business_settings
 from app.routes import invoice_api
-from app.routes.invoice_routes import router as invoice_router
+from app.routes.invoice_routes import router as invoice_routes_router
 from app.routes.ai_invoice_routes import router as ai_invoice_router
 from app.routes.ai_khata_routes import router as ai_khata_router
 
-# NEW AI COMMAND ROUTER
-from api.ai_router import router as ai_command_router
+# FIXED AI COMMAND ROUTER
+from app.api.ai_router_api import router as ai_command_router
 
+
+# =============================
+# APP INIT
+# =============================
 
 app = FastAPI(title="HisabKitab Pro Ultra Backend")
 
@@ -44,34 +54,39 @@ app.add_middleware(
 
 DB_NAME = "hisabkitab_pro.db"
 
-# DATABASE INIT
+# INIT DATABASE
 init_db()
 
 
 # =============================
-# ROUTERS
+# ROUTER REGISTRATION
 # =============================
 
 app.include_router(billing_router)
 app.include_router(customer_router)
 app.include_router(ledger_router)
 app.include_router(voice_router)
+
 app.include_router(invoice_router)
+app.include_router(invoice_routes_router)
+
 app.include_router(ocr_bill_router)
+
 app.include_router(business_ai_router)
 app.include_router(risk_ai_router)
+
 app.include_router(ai_router)
 app.include_router(ai_action_router)
 app.include_router(ai_voice_router)
 app.include_router(ai_learning_router)
-app.include_router(business_settings.router)
-app.include_router(invoice_api.router)
-app.include_router(invoice_router)
+
 app.include_router(ai_invoice_router)
 app.include_router(ai_khata_router)
 
-# NEW AI COMMAND ROUTER
 app.include_router(ai_command_router)
+
+app.include_router(business_settings.router)
+app.include_router(invoice_api.router)
 
 
 # =============================

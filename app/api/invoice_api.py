@@ -20,7 +20,7 @@ class InvoiceRequest(BaseModel):
     note: str = ""
     items: List[Item]
     template: str = "1"
-    apply_gst: bool = False
+    apply_gst: bool = False   # GST optional (OKCredit style)
 
 
 @router.post("/invoice/create")
@@ -28,7 +28,7 @@ def create_invoice(data: InvoiceRequest):
 
     invoice = generate_invoice(
         customer_name=data.customer_name,
-        items=data.items,
+        items=[item.dict() for item in data.items],
         note=data.note,
         template=data.template,
         apply_gst=data.apply_gst
