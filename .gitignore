@@ -1,34 +1,55 @@
+# =========================
 # Python Cache
+# =========================
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
 
+# =========================
 # Database (local only)
+# =========================
 *.db
 *.sqlite3
+*.db-shm
+*.db-wal
 
+# =========================
 # Environment files
+# =========================
 .env
 .env.*
 
+# =========================
 # Virtual Environment
+# =========================
+venv/
+env/
 aiapi/bin/
 aiapi/lib/
 aiapi/include/
 aiapi/pyvenv.cfg
 
+# =========================
 # Logs
+# =========================
 *.log
 
+# =========================
 # Temporary files
+# =========================
 temp*
 *.tmp
 
+# =========================
 # Build files
+# =========================
 build/
 dist/
 *.egg-info/
 
+# =========================
 # OS files
+# =========================
 .DS_Store
 Thumbs.db
