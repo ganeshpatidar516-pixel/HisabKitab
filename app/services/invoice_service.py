@@ -25,7 +25,6 @@ INVOICE_DIR = os.path.join(BASE_DIR, "invoices")
 
 os.makedirs(INVOICE_DIR, exist_ok=True)
 
-
 # =========================
 # ITEM CLASS
 # =========================
@@ -36,9 +35,8 @@ class ItemObj:
         self.qty = qty
         self.price = price
 
-
 # =========================
-# HEADER FUNCTION
+# HEADER
 # =========================
 
 def draw_business_header(c):
@@ -61,9 +59,8 @@ def draw_business_header(c):
     if BUSINESS_GST:
         c.drawString(50, y, f"GST: {BUSINESS_GST}")
 
-
 # =========================
-# DRAW TABLE HEADER
+# TABLE HEADER
 # =========================
 
 def draw_table_header(c):
@@ -77,6 +74,16 @@ def draw_table_header(c):
 
     c.line(50, 675, 500, 675)
 
+# =========================
+# FOOTER
+# =========================
+
+def draw_footer(c):
+
+    c.setFont("Helvetica", 9)
+
+    c.drawString(200, 80, "Thank you for your business")
+    c.drawString(190, 65, "Powered by HisabKitab Pro")
 
 # =========================
 # TEMPLATE 1
@@ -86,8 +93,8 @@ def draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr
 
     draw_business_header(c)
 
-    c.setFont("Helvetica-Bold", 14)
-    c.drawString(250, 820, "INVOICE")
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(240, 820, "TAX INVOICE")
 
     c.setFont("Helvetica", 11)
     c.drawString(50, 750, f"Invoice : {invoice_id}")
@@ -120,8 +127,12 @@ def draw_template_1(c, customer, items, amount, gst, total, note, invoice_id, qr
 
     c.drawString(320, y-60, f"Total : ₹{total}")
 
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(450, 860, "Scan & Pay")
+
     c.drawImage(qr, 450, 740, width=100, height=100)
 
+    draw_footer(c)
 
 # =========================
 # TEMPLATE 2
@@ -131,8 +142,8 @@ def draw_template_2(c, customer, items, amount, gst, total, note, invoice_id, qr
 
     draw_business_header(c)
 
-    c.setFont("Helvetica-Bold", 18)
-    c.drawString(220, 820, "INVOICE")
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(240, 820, "TAX INVOICE")
 
     c.setFont("Helvetica", 11)
     c.drawString(50, 750, f"Invoice : {invoice_id}")
@@ -164,8 +175,12 @@ def draw_template_2(c, customer, items, amount, gst, total, note, invoice_id, qr
 
     c.drawString(350, y-60, f"Total : ₹{total}")
 
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(450, 860, "Scan & Pay")
+
     c.drawImage(qr, 450, 740, width=100, height=100)
 
+    draw_footer(c)
 
 # =========================
 # TEMPLATE 3
@@ -176,7 +191,7 @@ def draw_template_3(c, customer, items, amount, gst, total, note, invoice_id, qr
     draw_business_header(c)
 
     c.setFont("Helvetica-Bold", 16)
-    c.drawString(50, 820, "HisabKitab Invoice")
+    c.drawString(240, 820, "TAX INVOICE")
 
     c.setFont("Helvetica", 11)
     c.drawString(50, 770, f"Invoice ID : {invoice_id}")
@@ -208,8 +223,12 @@ def draw_template_3(c, customer, items, amount, gst, total, note, invoice_id, qr
 
     c.drawString(50, y-60, f"Total : ₹{total}")
 
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(450, 860, "Scan & Pay")
+
     c.drawImage(qr, 400, 740, width=120, height=120)
 
+    draw_footer(c)
 
 # =========================
 # MAIN INVOICE FUNCTION
