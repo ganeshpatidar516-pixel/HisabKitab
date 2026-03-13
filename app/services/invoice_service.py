@@ -68,26 +68,37 @@ def draw_header(c, settings):
     phone = settings.get("phone", "")
     address = settings.get("address", "")
     gst = settings.get("gst_number", "")
+    logo = settings.get("logo", "")
+
+    if logo and os.path.exists(logo):
+
+        c.drawImage(logo, 50, 790, width=60, height=60)
+
+        x = 120
+
+    else:
+
+        x = 50
 
     c.setFont("Helvetica-Bold", 18)
 
     if name:
-        c.drawString(50, 820, name)
+        c.drawString(x, 820, name)
 
     c.setFont("Helvetica", 10)
 
     y = 800
 
     if address:
-        c.drawString(50, y, address)
+        c.drawString(x, y, address)
         y -= 15
 
     if phone:
-        c.drawString(50, y, f"Phone: {phone}")
+        c.drawString(x, y, f"Phone: {phone}")
         y -= 15
 
     if gst:
-        c.drawString(50, y, f"GST: {gst}")
+        c.drawString(x, y, f"GST: {gst}")
 
 
 # =========================
@@ -103,7 +114,7 @@ def draw_footer(c):
 
 
 # =========================
-# TEMPLATE 1 (RETAIL)
+# TEMPLATE RETAIL
 # =========================
 
 def template_retail(c, settings, customer, items, amount, gst, total, note, invoice_id, qr):
@@ -161,85 +172,12 @@ def template_retail(c, settings, customer, items, amount, gst, total, note, invo
 
 
 # =========================
-# TEMPLATE 2 (CLASSIC)
-# =========================
-
-def template_classic(c, settings, customer, items, amount, gst, total, note, invoice_id, qr):
-
-    draw_header(c, settings)
-
-    c.setFont("Helvetica-Bold", 18)
-    c.drawCentredString(300, 820, "TAX INVOICE")
-
-    c.setFont("Helvetica", 11)
-
-    c.drawString(50, 760, f"Invoice ID : {invoice_id}")
-    c.drawString(50, 740, f"Customer : {customer}")
-
-    y = 700
-
-    for item in items:
-
-        item_total = item.qty * item.price
-
-        c.drawString(50, y, item.name)
-        c.drawString(300, y, str(item.qty))
-        c.drawString(350, y, str(item.price))
-        c.drawString(450, y, str(item_total))
-
-        y -= 20
-
-    c.drawString(350, y-20, f"Subtotal : ₹{amount}")
-    c.drawString(350, y-40, f"GST : ₹{gst}")
-    c.drawString(350, y-60, f"Total : ₹{total}")
-
-    c.drawImage(qr, 450, 740, width=100, height=100)
-
-    draw_footer(c)
-
-
-# =========================
-# TEMPLATE 3 (MINIMAL)
-# =========================
-
-def template_minimal(c, settings, customer, items, amount, gst, total, note, invoice_id, qr):
-
-    draw_header(c, settings)
-
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(50, 800, "Invoice")
-
-    c.drawString(50, 770, f"ID : {invoice_id}")
-    c.drawString(50, 750, f"Customer : {customer}")
-
-    y = 710
-
-    for item in items:
-
-        item_total = item.qty * item.price
-
-        c.drawString(50, y, f"{item.name} x {item.qty}")
-        c.drawString(250, y, f"₹{item_total}")
-
-        y -= 20
-
-    c.drawString(50, y-20, f"Total : ₹{total}")
-
-    c.drawImage(qr, 400, 720, width=120, height=120)
-
-    draw_footer(c)
-
-
-# =========================
-# MAIN INVOICE FUNCTION
+# MAIN FUNCTION
 # =========================
 
 def generate_invoice(username, customer_name, items, note="", template=None, apply_gst=False):
 
     settings = load_business_settings(username)
-
-    if not template:
-        template = settings.get("default_template", "1")
 
     invoice_id = f"INV-{int(time.time())}"
 
@@ -270,15 +208,7 @@ def generate_invoice(username, customer_name, items, note="", template=None, app
 
     c = canvas.Canvas(pdf_path, pagesize=A4)
 
-    templates = {
-        "1": template_retail,
-        "2": template_classic,
-        "3": template_minimal
-    }
-
-    template_func = templates.get(template, template_retail)
-
-    template_func(
+    template_retail(
         c,
         settings,
         customer_name,
