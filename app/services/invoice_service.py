@@ -95,10 +95,55 @@ def save_invoice_db(username, invoice_id, customer, amount, gst, total):
 
 
 # =========================
+# HEADER
+# =========================
+
+def draw_header(c, settings):
+
+    name = settings.get("business_name", "")
+    phone = settings.get("phone", "")
+    address = settings.get("address", "")
+    gst = settings.get("gst_number", "")
+
+    c.setFont("Helvetica-Bold", 18)
+    c.drawString(50, 820, name)
+
+    c.setFont("Helvetica", 10)
+
+    if address:
+        c.drawString(50, 800, address)
+
+    if phone:
+        c.drawString(50, 785, f"Phone: {phone}")
+
+    if gst:
+        c.drawString(50, 770, f"GST: {gst}")
+
+
+# =========================
+# FOOTER
+# =========================
+
+def draw_footer(c):
+
+    c.setFont("Helvetica", 9)
+
+    c.drawString(200, 80, "Thank you for your business")
+    c.drawString(190, 65, "Powered by HisabKitab Pro")
+
+
+# =========================
 # GENERATE INVOICE
 # =========================
 
-def generate_invoice(username, customer_name, items, apply_gst=False, note=None):
+def generate_invoice(
+    username,
+    customer_name,
+    items,
+    template="1",
+    apply_gst=False,
+    note=None
+):
 
     if not items:
         raise Exception("Invoice items missing")
@@ -109,40 +154,56 @@ def generate_invoice(username, customer_name, items, apply_gst=False, note=None)
 
     pdf_path = os.path.join(INVOICE_DIR, f"{invoice_id}.pdf")
 
+    # convert items
+
     item_objects = []
 
     for i in items:
+
         item_objects.append(
             ItemObj(i["name"], i["qty"], i["price"])
         )
 
+    # calculate subtotal
+
     amount = 0
 
     for item in item_objects:
+
         amount += item.qty * item.price
 
     gst = 0
 
     if apply_gst:
+
         gst = amount * 0.18
 
     total = amount + gst
 
 
+    # =========================
     # QR CODE
+    # =========================
+
     qr_data = f"upi://pay?pa=test@upi&pn=HisabKitab&am={total}"
+
     qr = qrcode.make(qr_data)
 
-    qr_path = os.path.join(INVOICE_DIR, f"{invoice_id}_qr.png")
+    qr_path = os.path.join(INVOICE_DIR, f"{invoice_id}.png")
 
     qr.save(qr_path)
 
 
+    # =========================
     # CREATE PDF
+    # =========================
 
     c = canvas.Canvas(pdf_path, pagesize=A4)
 
+    draw_header(c, settings)
+
     c.setFont("Helvetica-Bold", 16)
+
     c.drawString(240, 820, "TAX INVOICE")
 
     c.setFont("Helvetica", 11)
@@ -151,6 +212,7 @@ def generate_invoice(username, customer_name, items, apply_gst=False, note=None)
     c.drawString(50, 720, f"Customer : {customer_name}")
 
     if note:
+
         c.drawString(50, 700, f"Note : {note}")
 
     y = 640
@@ -177,22 +239,25 @@ def generate_invoice(username, customer_name, items, apply_gst=False, note=None)
 
         y -= 20
 
-
     c.line(50, y, 500, y)
 
     c.drawString(320, y - 20, f"Subtotal : ₹{amount}")
 
     if gst:
+
         c.drawString(320, y - 40, f"GST : ₹{gst}")
+
     else:
+
         c.drawString(320, y - 40, "GST : Not Applied")
 
     c.drawString(320, y - 60, f"Total : ₹{total}")
 
     c.drawImage(qr_path, 450, 740, width=100, height=100)
 
-    c.save()
+    draw_footer(c)
 
+    c.save()
 
     save_invoice_db(
         username,
@@ -203,8 +268,10 @@ def generate_invoice(username, customer_name, items, apply_gst=False, note=None)
         total
     )
 
-
     return {
+
         "invoice_id": invoice_id,
+
         "file_path": f"invoices/{invoice_id}.pdf"
+
     }
