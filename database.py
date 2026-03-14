@@ -1,9 +1,17 @@
 import sqlite3
 import os
 
+# =========================
+# DATABASE PATH
+# =========================
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "hisabkitab_pro.db")
 
+
+# =========================
+# DB CONNECTION
+# =========================
 
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
@@ -11,13 +19,19 @@ def get_db_connection():
     return conn
 
 
+# =========================
+# DATABASE INIT
+# =========================
+
 def init_database():
+
     conn = get_db_connection()
     cursor = conn.cursor()
 
     # =========================
     # BUSINESS SETTINGS TABLE
     # =========================
+
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS business_settings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,8 +45,24 @@ def init_database():
     """)
 
     # =========================
+    # CUSTOMERS TABLE
+    # =========================
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS customers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT,
+        name TEXT,
+        phone TEXT,
+        address TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    # =========================
     # ENTRIES TABLE
     # =========================
+
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS entries (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -48,6 +78,7 @@ def init_database():
     # =========================
     # INVOICES TABLE
     # =========================
+
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS invoices (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -64,6 +95,7 @@ def init_database():
     # =========================
     # INVOICE ITEMS TABLE
     # =========================
+
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS invoice_items (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -78,5 +110,8 @@ def init_database():
     conn.close()
 
 
-# auto initialize database
+# =========================
+# AUTO INIT DATABASE
+# =========================
+
 init_database()
