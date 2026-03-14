@@ -1,16 +1,15 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from database import get_db_connection
+from app.auth.jwt_handler import get_current_user
 
 router = APIRouter()
-
 
 # =============================
 # DATA MODEL
 # =============================
 
 class LedgerEntry(BaseModel):
-    username: str
     customer_id: int
     type: str
     amount: float
@@ -22,7 +21,9 @@ class LedgerEntry(BaseModel):
 # =============================
 
 @router.post("/ledger/add")
-def add_entry(data: LedgerEntry):
+def add_entry(data: LedgerEntry, user: dict = Depends(get_current_user)):
+
+    username = user["username"]
 
     with get_db_connection() as conn:
         cursor = conn.cursor()
@@ -31,7 +32,7 @@ def add_entry(data: LedgerEntry):
         INSERT INTO entries (username, customer_id, type, amount, note)
         VALUES (?, ?, ?, ?, ?)
         """, (
-            data.username,
+            username,
             data.customer_id,
             data.type,
             data.amount,
@@ -51,7 +52,7 @@ def add_entry(data: LedgerEntry):
 # =============================
 
 @router.get("/ledger/customer/{customer_id}")
-def customer_ledger(customer_id: int):
+def customer_ledger(customer_id: int, user: dict = Depends(get_current_user)):
 
     with get_db_connection() as conn:
         cursor = conn.cursor()
@@ -72,7 +73,7 @@ def customer_ledger(customer_id: int):
 # =============================
 
 @router.get("/ledger/balance/{customer_id}")
-def customer_balance(customer_id: int):
+def customer_balance(customer_id: int, user: dict = Depends(get_current_user)):
 
     with get_db_connection() as conn:
         cursor = conn.cursor()
