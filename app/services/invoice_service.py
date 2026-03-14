@@ -7,11 +7,20 @@ from reportlab.lib.pagesizes import A4
 
 from database import get_db_connection
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# =========================
+# PATH SETUP (RENDER SAFE)
+# =========================
+
+BASE_DIR = os.getcwd()
 INVOICE_DIR = os.path.join(BASE_DIR, "invoices")
 
 os.makedirs(INVOICE_DIR, exist_ok=True)
 
+
+# =========================
+# ITEM CLASS
+# =========================
 
 class ItemObj:
     def __init__(self, name, qty, price):
@@ -19,6 +28,10 @@ class ItemObj:
         self.qty = qty
         self.price = price
 
+
+# =========================
+# LOAD BUSINESS SETTINGS
+# =========================
 
 def load_business_settings(username):
 
@@ -44,6 +57,10 @@ def load_business_settings(username):
         return dict(row)
 
 
+# =========================
+# SAVE INVOICE DB
+# =========================
+
 def save_invoice_db(username, invoice_id, customer, amount, gst, total):
 
     with get_db_connection() as conn:
@@ -63,12 +80,27 @@ def save_invoice_db(username, invoice_id, customer, amount, gst, total):
         """)
 
         cur.execute(
-            "INSERT INTO invoices(username,invoice_id,customer,amount,gst,total,created_at) VALUES(?,?,?,?,?,?,datetime('now'))",
-            (username, invoice_id, customer, amount, gst, total)
+            """
+            INSERT INTO invoices(username, invoice_id, customer, amount, gst, total, created_at)
+            VALUES(?,?,?,?,?,?,?)
+            """,
+            (
+                username,
+                invoice_id,
+                customer,
+                amount,
+                gst,
+                total,
+                time.strftime("%Y-%m-%d %H:%M:%S")
+            )
         )
 
         conn.commit()
 
+
+# =========================
+# HEADER
+# =========================
 
 def draw_header(c, settings):
 
@@ -92,15 +124,22 @@ def draw_header(c, settings):
         c.drawString(50, 770, f"GST: {gst}")
 
 
+# =========================
+# FOOTER
+# =========================
+
 def draw_footer(c):
 
     c.setFont("Helvetica", 9)
-
     c.drawString(200, 80, "Thank you for your business")
     c.drawString(190, 65, "Powered by HisabKitab Pro")
 
 
-def generate_invoice(username, customer_name, items, template=None, apply_gst=False):
+# =========================
+# GENERATE INVOICE
+# =========================
+
+def generate_invoice(username, customer_name, items, apply_gst=True):
 
     settings = load_business_settings(username)
 
@@ -125,14 +164,18 @@ def generate_invoice(username, customer_name, items, template=None, apply_gst=Fa
 
     total = amount + gst
 
+
+    # QR
     qr_data = f"upi://pay?pa=test@upi&pn=HisabKitab&am={total}"
 
     qr = qrcode.make(qr_data)
 
-    qr_path = os.path.join(INVOICE_DIR, f"{invoice_id}.png")
+    qr_path = os.path.join(INVOICE_DIR, f"{invoice_id}_qr.png")
 
     qr.save(qr_path)
 
+
+    # PDF
     c = canvas.Canvas(pdf_path, pagesize=A4)
 
     draw_header(c, settings)
@@ -147,6 +190,7 @@ def generate_invoice(username, customer_name, items, template=None, apply_gst=Fa
     y = 680
 
     c.setFont("Helvetica-Bold", 11)
+
     c.drawString(50, y, "Item")
     c.drawString(250, y, "Qty")
     c.drawString(320, y, "Price")
