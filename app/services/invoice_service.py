@@ -9,12 +9,11 @@ from database import get_db_connection
 
 
 # =========================
-# PATH SETUP (RENDER SAFE)
+# PATH SETUP
 # =========================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-INVOICE_DIR = os.path.join(BASE_DIR, "../../invoices")
-INVOICE_DIR = os.path.abspath(INVOICE_DIR)
+INVOICE_DIR = os.path.abspath(os.path.join(BASE_DIR, "../../invoices"))
 
 os.makedirs(INVOICE_DIR, exist_ok=True)
 
@@ -24,6 +23,7 @@ os.makedirs(INVOICE_DIR, exist_ok=True)
 # =========================
 
 class ItemObj:
+
     def __init__(self, name, qty, price):
         self.name = name
         self.qty = qty
@@ -60,7 +60,7 @@ def load_business_settings(username):
 
 
 # =========================
-# SAVE INVOICE DB
+# SAVE INVOICE
 # =========================
 
 def save_invoice_db(username, invoice_id, customer, amount, gst, total):
@@ -69,22 +69,17 @@ def save_invoice_db(username, invoice_id, customer, amount, gst, total):
 
         cur = conn.cursor()
 
-        cur.execute("""
-        CREATE TABLE IF NOT EXISTS invoices(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT,
-            invoice_id TEXT,
-            customer TEXT,
-            amount REAL,
-            gst REAL,
-            total REAL,
-            created_at TEXT
-        )
-        """)
-
         cur.execute(
             """
-            INSERT INTO invoices(username, invoice_id, customer, amount, gst, total, created_at)
+            INSERT INTO invoices(
+                username,
+                invoice_id,
+                customer,
+                amount,
+                gst,
+                total,
+                created_at
+            )
             VALUES(?,?,?,?,?,?,?)
             """,
             (
@@ -175,7 +170,7 @@ def generate_invoice(username, customer_name, items, apply_gst=True):
 
 
     # =========================
-    # QR
+    # QR CODE
     # =========================
 
     qr_data = f"upi://pay?pa=test@upi&pn=HisabKitab&am={total}"
@@ -188,7 +183,7 @@ def generate_invoice(username, customer_name, items, apply_gst=True):
 
 
     # =========================
-    # PDF
+    # CREATE PDF
     # =========================
 
     c = canvas.Canvas(pdf_path, pagesize=A4)
@@ -244,9 +239,17 @@ def generate_invoice(username, customer_name, items, apply_gst=True):
 
     c.save()
 
-    save_invoice_db(username, invoice_id, customer_name, amount, gst, total)
+    save_invoice_db(
+        username,
+        invoice_id,
+        customer_name,
+        amount,
+        gst,
+        total
+    )
 
     return {
         "invoice_id": invoice_id,
         "file_path": f"invoices/{invoice_id}.pdf"
-    }
+    }	
+
