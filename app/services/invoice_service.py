@@ -12,8 +12,9 @@ from database import get_db_connection
 # PATH SETUP (RENDER SAFE)
 # =========================
 
-BASE_DIR = os.getcwd()
-INVOICE_DIR = os.path.join(BASE_DIR, "invoices")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+INVOICE_DIR = os.path.join(BASE_DIR, "../../invoices")
+INVOICE_DIR = os.path.abspath(INVOICE_DIR)
 
 os.makedirs(INVOICE_DIR, exist_ok=True)
 
@@ -36,6 +37,7 @@ class ItemObj:
 def load_business_settings(username):
 
     with get_db_connection() as conn:
+
         cur = conn.cursor()
 
         cur.execute(
@@ -64,6 +66,7 @@ def load_business_settings(username):
 def save_invoice_db(username, invoice_id, customer, amount, gst, total):
 
     with get_db_connection() as conn:
+
         cur = conn.cursor()
 
         cur.execute("""
@@ -131,6 +134,7 @@ def draw_header(c, settings):
 def draw_footer(c):
 
     c.setFont("Helvetica", 9)
+
     c.drawString(200, 80, "Thank you for your business")
     c.drawString(190, 65, "Powered by HisabKitab Pro")
 
@@ -141,6 +145,9 @@ def draw_footer(c):
 
 def generate_invoice(username, customer_name, items, apply_gst=True):
 
+    if not items:
+        raise Exception("Invoice items missing")
+
     settings = load_business_settings(username)
 
     invoice_id = f"INV-{int(time.time())}"
@@ -150,7 +157,9 @@ def generate_invoice(username, customer_name, items, apply_gst=True):
     item_objects = []
 
     for i in items:
-        item_objects.append(ItemObj(i["name"], i["qty"], i["price"]))
+        item_objects.append(
+            ItemObj(i["name"], i["qty"], i["price"])
+        )
 
     amount = 0
 
@@ -165,7 +174,10 @@ def generate_invoice(username, customer_name, items, apply_gst=True):
     total = amount + gst
 
 
+    # =========================
     # QR
+    # =========================
+
     qr_data = f"upi://pay?pa=test@upi&pn=HisabKitab&am={total}"
 
     qr = qrcode.make(qr_data)
@@ -175,7 +187,10 @@ def generate_invoice(username, customer_name, items, apply_gst=True):
     qr.save(qr_path)
 
 
+    # =========================
     # PDF
+    # =========================
+
     c = canvas.Canvas(pdf_path, pagesize=A4)
 
     draw_header(c, settings)
@@ -184,6 +199,7 @@ def generate_invoice(username, customer_name, items, apply_gst=True):
     c.drawString(240, 820, "TAX INVOICE")
 
     c.setFont("Helvetica", 11)
+
     c.drawString(50, 740, f"Invoice : {invoice_id}")
     c.drawString(50, 720, f"Customer : {customer_name}")
 
