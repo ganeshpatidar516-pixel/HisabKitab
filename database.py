@@ -12,8 +12,13 @@ def get_db_connection():
 
 
 def init_database():
+
     conn = get_db_connection()
     cursor = conn.cursor()
+
+    # =========================
+    # ENTRIES TABLE
+    # =========================
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS entries (
@@ -24,6 +29,23 @@ def init_database():
         amount REAL,
         note TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    # =========================
+    # INVOICES TABLE
+    # =========================
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS invoices (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT,
+        invoice_id TEXT,
+        customer TEXT,
+        amount REAL,
+        gst REAL,
+        total REAL,
+        created_at TEXT
     )
     """)
 
