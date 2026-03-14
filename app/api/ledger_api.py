@@ -24,18 +24,15 @@ def add_entry(data: LedgerEntry):
     with get_db_connection() as conn:
         cursor = conn.cursor()
 
-        cursor.execute(
-            """
-            INSERT INTO entries (customer_id, type, amount, note)
-            VALUES (?, ?, ?, ?)
-            """,
-            (
-                data.customer_id,
-                data.type,
-                data.amount,
-                data.note
-            )
-        )
+        cursor.execute("""
+        INSERT INTO entries (customer_id, type, amount, note)
+        VALUES (?, ?, ?, ?)
+        """, (
+            data.customer_id,
+            data.type,
+            data.amount,
+            data.note
+        ))
 
         conn.commit()
 
@@ -54,14 +51,11 @@ def customer_ledger(customer_id: int):
     with get_db_connection() as conn:
         cursor = conn.cursor()
 
-        cursor.execute(
-            """
-            SELECT * FROM entries
-            WHERE customer_id=?
-            ORDER BY created_at DESC
-            """,
-            (customer_id,)
-        )
+        cursor.execute("""
+        SELECT * FROM entries
+        WHERE customer_id=?
+        ORDER BY created_at DESC
+        """, (customer_id,))
 
         rows = cursor.fetchall()
 
@@ -77,17 +71,14 @@ def customer_balance(customer_id: int):
     with get_db_connection() as conn:
         cursor = conn.cursor()
 
-        cursor.execute(
-            """
-            SELECT
-            COALESCE(SUM(CASE WHEN type='credit' THEN amount END),0) -
-            COALESCE(SUM(CASE WHEN type='debit' THEN amount END),0)
-            as balance
-            FROM entries
-            WHERE customer_id=?
-            """,
-            (customer_id,)
-        )
+        cursor.execute("""
+        SELECT
+        COALESCE(SUM(CASE WHEN type='credit' THEN amount END),0) -
+        COALESCE(SUM(CASE WHEN type='debit' THEN amount END),0)
+        as balance
+        FROM entries
+        WHERE customer_id=?
+        """, (customer_id,))
 
         result = cursor.fetchone()
 
