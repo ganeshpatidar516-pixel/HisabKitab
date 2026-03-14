@@ -23,7 +23,6 @@ os.makedirs(INVOICE_DIR, exist_ok=True)
 # =========================
 
 class ItemObj:
-
     def __init__(self, name, qty, price):
         self.name = name
         self.qty = qty
@@ -60,7 +59,7 @@ def load_business_settings(username):
 
 
 # =========================
-# SAVE INVOICE
+# SAVE INVOICE DB
 # =========================
 
 def save_invoice_db(username, invoice_id, customer, amount, gst, total):
@@ -138,7 +137,14 @@ def draw_footer(c):
 # GENERATE INVOICE
 # =========================
 
-def generate_invoice(username, customer_name, items, apply_gst=True):
+def generate_invoice(
+    username,
+    customer_name,
+    items,
+    apply_gst=False,
+    note=None,
+    payment_method=None
+):
 
     if not items:
         raise Exception("Invoice items missing")
@@ -198,7 +204,13 @@ def generate_invoice(username, customer_name, items, apply_gst=True):
     c.drawString(50, 740, f"Invoice : {invoice_id}")
     c.drawString(50, 720, f"Customer : {customer_name}")
 
-    y = 680
+    if payment_method:
+        c.drawString(50, 700, f"Payment : {payment_method}")
+
+    if note:
+        c.drawString(50, 680, f"Note : {note}")
+
+    y = 640
 
     c.setFont("Helvetica-Bold", 11)
 
@@ -251,5 +263,4 @@ def generate_invoice(username, customer_name, items, apply_gst=True):
     return {
         "invoice_id": invoice_id,
         "file_path": f"invoices/{invoice_id}.pdf"
-    }	
-
+    }
