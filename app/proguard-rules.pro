@@ -20,17 +20,56 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
-# Keep Hilt/Dagger generated wiring used through reflection/proguard-sensitive paths.
--keep class dagger.hilt.** { *; }
--keep class javax.inject.** { *; }
+# Kotlin + Gson + Room metadata (required for release reflection).
+-keepattributes Signature, InnerClasses, EnclosingMethod
+-keepattributes RuntimeVisibleAnnotations, RuntimeVisibleParameterAnnotations, AnnotationDefault
+-keepattributes KotlinMetadata, *Annotation*
 
-# Keep Retrofit service interfaces and model metadata for Gson.
--keepattributes Signature
--keepattributes *Annotation*
--keep class com.ganesh.hisabkitabpro.network.api.** { *; }
+# ---------------------------------------------------------------------------
+# SQLCipher (P0) — release crash: JNI_OnLoad looks up field "mNativeHandle" by name.
+# Without these rules R8 strips/renames it → SIGABRT on Application.onCreate / AppDatabase.
+# ---------------------------------------------------------------------------
+-keep class net.sqlcipher.** { *; }
+-keepclassmembers class net.sqlcipher.** { *; }
+-keepclasseswithmembernames class net.sqlcipher.** {
+    native <methods>;
+}
+-keepclassmembers class net.sqlcipher.database.SQLiteDatabase {
+    long mNativeHandle;
+}
+-keep class net.sqlcipher.database.SupportFactory { *; }
+-keep class net.sqlcipher.database.SQLiteOpenHelper { *; }
+-dontwarn net.sqlcipher.**
+
+# ---------------------------------------------------------------------------
+# Hilt / Dagger (generated injectors + entry points)
+# ---------------------------------------------------------------------------
+-keep class dagger.hilt.** { *; }
+-keep class dagger.** { *; }
+-keep class javax.inject.** { *; }
+-keep @dagger.hilt.android.AndroidEntryPoint class * { *; }
+-keep @dagger.hilt.android.HiltAndroidApp class * { *; }
+-keep class * extends dagger.hilt.android.internal.managers.** { *; }
+-keep class com.ganesh.hisabkitabpro.Hilt_* { *; }
+-keep class com.ganesh.hisabkitabpro.**_HiltModules* { *; }
+-keep class com.ganesh.hisabkitabpro.**_MembersInjector { *; }
+-keep class com.ganesh.hisabkitabpro.**_Factory { *; }
+-keep class com.ganesh.hisabkitabpro.**_Impl { *; }
+-keep class * implements dagger.hilt.internal.GeneratedComponent { *; }
+
+# ---------------------------------------------------------------------------
+# HisabKitab data layer — Room entities, DAOs, DTOs, sync payloads (user mandate)
+# ---------------------------------------------------------------------------
+-keep class com.ganesh.hisabkitabpro.data.** { *; }
+-keep interface com.ganesh.hisabkitabpro.data.repository.local.** { *; }
 -keep class com.ganesh.hisabkitabpro.domain.model.** { *; }
+-keep class com.ganesh.hisabkitabpro.domain.sync.** { *; }
 -keep class com.ganesh.hisabkitabpro.domain.businessidentity.** { *; }
 -keep class com.ganesh.hisabkitabpro.addon.audit.** { *; }
+-keep class com.ganesh.hisabkitabpro.data.repository.converters.** { *; }
+
+# Retrofit / API
+-keep class com.ganesh.hisabkitabpro.network.api.** { *; }
 
 # Keep Gson type adapters and prevent warnings from optional libs.
 -keep class com.google.gson.** { *; }
@@ -38,9 +77,23 @@
 -dontwarn org.conscrypt.**
 -dontwarn org.slf4j.impl.StaticLoggerBinder
 
-# Room (release minify)
--keep class * extends androidx.room.RoomDatabase
+# Room (release minify) — keep generated *_Impl and Kotlin property columns
+-keep class * extends androidx.room.RoomDatabase {
+    <init>(...);
+    <fields>;
+    <methods>;
+}
 -keep @androidx.room.Entity class * { *; }
+-keep @androidx.room.Dao interface * { *; }
+-keep @androidx.room.Database class * { *; }
+-keep @androidx.room.TypeConverter class * { *; }
+-keepclassmembers class * {
+    @androidx.room.* <methods>;
+}
+-keep class * extends androidx.room.RoomDatabase_Impl { *; }
+-keep class **_Impl { *; }
+-keep class com.ganesh.hisabkitabpro.data.local.AppDatabase { *; }
+-keep class com.ganesh.hisabkitabpro.data.local.AppDatabase_Impl { *; }
 -dontwarn androidx.room.paging.**
 
 # Play Core / in-app update (reflection in some paths)
