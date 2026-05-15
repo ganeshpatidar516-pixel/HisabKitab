@@ -1,0 +1,216 @@
+{
+  "version": 1,
+  "industries": [
+    {
+      "id": "food_beverage",
+      "label": "Food & Beverage",
+      "synonyms": ["F&B", "restaurant", "cafe", "chai"],
+      "subcategories": [
+        {
+          "id": "tea_stall",
+          "label": "Tea Stall",
+          "synonyms": ["chai", "tapri", "stall"],
+          "tags": ["Rajwadi Tea", "Organic Tea", "Premium Tea", "Highway Stop", "Family Seating", "AC Available", "WiFi Available"]
+        },
+        {
+          "id": "cafe",
+          "label": "Cafe",
+          "synonyms": ["coffee shop"],
+          "tags": ["Specialty Coffee", "Breakfast", "Coworking Friendly", "Outdoor Seating"]
+        },
+        {
+          "id": "restaurant",
+          "label": "Restaurant",
+          "synonyms": ["dining", "hotel food"],
+          "tags": ["Pure Veg", "Non Veg", "Fine Dining", "Quick Service", "Cloud Kitchen"]
+        },
+        {
+          "id": "bakery",
+          "label": "Bakery",
+          "synonyms": ["cakes", "pastry"],
+          "tags": ["Custom Cakes", "Eggless", "Artisan Bread"]
+        },
+        {
+          "id": "juice_center",
+          "label": "Juice Center",
+          "synonyms": ["shakes", "lassi"],
+          "tags": ["Fresh Fruit", "Sugar Free Options"]
+        }
+      ]
+    },
+    {
+      "id": "retail",
+      "label": "Retail",
+      "synonyms": ["shop", "kirana", "store"],
+      "subcategories": [
+        {
+          "id": "grocery",
+          "label": "Grocery / General Store",
+          "synonyms": ["kirana", "provision"],
+          "tags": ["Home Delivery", "Wholesale", "Organic Section"]
+        },
+        {
+          "id": "fashion_retail",
+          "label": "Fashion Retail",
+          "synonyms": ["apparel", "clothing"],
+          "tags": ["Mens Wear", "Womens Wear", "Kids", "Traditional Wear"]
+        }
+      ]
+    },
+    {
+      "id": "healthcare",
+      "label": "Healthcare",
+      "synonyms": ["clinic", "hospital", "doctor"],
+      "subcategories": [
+        {
+          "id": "clinic",
+          "label": "Clinic",
+          "synonyms": ["OPD"],
+          "tags": ["General Practice", "Dental", "Physiotherapy", "Diagnostics"]
+        },
+        {
+          "id": "pharmacy",
+          "label": "Pharmacy",
+          "synonyms": ["medical store", "chemist"],
+          "tags": ["24x7", "Home Delivery", "Generic Medicines"]
+        }
+      ]
+    },
+    {
+      "id": "technology",
+      "label": "Technology",
+      "synonyms": ["IT", "software", "tech services"],
+      "subcategories": [
+        {
+          "id": "digital_services",
+          "label": "Digital Services",
+          "synonyms": ["agency", "development"],
+          "tags": ["Web Development", "Mobile Apps", "IT Support", "Cybersecurity"]
+        }
+      ]
+    },
+    {
+      "id": "beauty_salon",
+      "label": "Beauty & Salon",
+      "synonyms": ["parlour", "spa"],
+      "subcategories": [
+        {
+          "id": "salon",
+          "label": "Salon",
+          "synonyms": ["hair", "cut"],
+          "tags": ["Unisex", "Bridal", "Spa", "Home Service"]
+        }
+      ]
+    },
+    {
+      "id": "professional_services",
+      "label": "Professional Services",
+      "synonyms": ["CA", "consultant", "lawyer"],
+      "subcategories": [
+        {
+          "id": "accounting",
+          "label": "Accounting & Tax",
+          "synonyms": ["CA firm", "GST"],
+          "tags": ["GST Filing", "Bookkeeping", "Audit Support"]
+        },
+        {
+          "id": "legal",
+          "label": "Legal",
+          "synonyms": ["advocate"],
+          "tags": ["Corporate", "Property", "Civil"]
+        }
+      ]
+    },
+    {
+      "id": "logistics",
+      "label": "Logistics",
+      "synonyms": ["transport", "courier"],
+      "subcategories": [
+        {
+          "id": "courier",
+          "label": "Courier & Delivery",
+          "synonyms": ["parcel"],
+          "tags": ["Same Day", "Intercity", "E-commerce Fulfillment"]
+        }
+      ]
+    },
+    {
+      "id": "education",
+      "label": "Education",
+      "synonyms": ["coaching", "school", "tuition"],
+      "subcategories": [
+        {
+          "id": "coaching",
+          "label": "Coaching & Tuition",
+          "synonyms": ["classes"],
+          "tags": ["Competitive Exams", "Languages", "STEM", "Online Classes"]
+        }
+      ]
+    },
+    {
+      "id": "automobile",
+      "label": "Automobile",
+      "synonyms": ["garage", "workshop"],
+      "subcategories": [
+        {
+          "id": "two_wheeler_service",
+          "label": "Two Wheeler Service",
+          "synonyms": ["bike repair"],
+          "tags": ["Authorized Service", "Quick Service", "Spare Parts"]
+        }
+      ]
+    },
+    {
+      "id": "construction",
+      "label": "Construction",
+      "synonyms": ["contractor", "builder"],
+      "subcategories": [
+        {
+          "id": "contractor",
+          "label": "Contractor",
+          "synonyms": ["civil"],
+          "tags": ["Residential", "Commercial", "Renovation"]
+        }
+      ]
+    },
+    {
+      "id": "real_estate",
+      "label": "Real Estate",
+      "synonyms": ["property", "broker"],
+      "subcategories": [
+        {
+          "id": "brokerage",
+          "label": "Brokerage",
+          "synonyms": ["agent"],
+          "tags": ["Residential Sales", "Rentals", "Commercial"]
+        }
+      ]
+    },
+    {
+      "id": "freelancing",
+      "label": "Freelancing",
+      "synonyms": ["solo", "consultant"],
+      "subcategories": [
+        {
+          "id": "creative",
+          "label": "Creative Freelance",
+          "synonyms": ["designer", "content"],
+          "tags": ["Graphic Design", "Content Writing", "Video Editing"]
+        }
+      ]
+    },
+    {
+      "id": "ecommerce",
+      "label": "E-commerce",
+      "synonyms": ["online store", "D2C"],
+      "subcategories": [
+        {
+          "id": "online_retail",
+          "label": "Online Retail",
+          "synonyms": ["marketplace seller"],
+          "tags": ["Amazon", "Flipkart", "D2C Website", "Social Commerce"]
+        }
+      ]
+    }
+  ]
+}

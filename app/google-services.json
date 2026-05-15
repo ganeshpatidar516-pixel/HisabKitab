@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "84145078174",
+    "project_id": "hisabkitab-pro-5d4ee",
+    "storage_bucket": "hisabkitab-pro-5d4ee.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:84145078174:android:c597b691bec38173fb608f",
+        "android_client_info": {
+          "package_name": "com.ganesh.hisabkitabpro"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "84145078174-l2j2fvabldjf8agdbv5a2qt31cdbeei7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ganesh.hisabkitabpro",
+            "certificate_hash": "b9ea5117255adcb5e8a32141c1f74632c4020187"
+          }
+        },
+        {
+          "client_id": "84145078174-5v1j9ei3oh00b34fek7centih6jdjdi2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDnnm4e2gYnyEu9UAMkct4UGfjt_BUb22w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "84145078174-5v1j9ei3oh00b34fek7centih6jdjdi2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

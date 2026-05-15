@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Explicit Android 12+ data extraction policy:
+  - Deny-all for both cloud-backup and device-transfer.
+  - Matches manifest android:allowBackup="false" and prevents accidental policy drift.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" path="." />
+    </device-transfer>
+</data-extraction-rules>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Hostname must match Retrofit base URL (no scheme, no path). -->
+    <string name="cert_pin_hostname" translatable="false">hisabkitab-production-ceea.up.railway.app</string>
+    <!--
+      OkHttp CertificatePinner pins (sha256/ + 44-char base64). Entries containing PLACEHOLDER
+      are ignored until you replace them. Enable pinning via BuildConfig.CERT_PINNING_ENABLED.
+    -->
+    <string-array name="cert_pin_sha256_pins" translatable="false">
+        <item>sha256/PLACEHOLDER_REPLACE_WITH_LEAF_SPKI_HASH</item>
+        <item>sha256/PLACEHOLDER_REPLACE_WITH_BACKUP_SPKI_HASH</item>
+    </string-array>
+</resources>

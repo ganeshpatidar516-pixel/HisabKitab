@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Phase 9 — least-privilege FileProvider paths (after one-time migration).
+  Legacy root files are moved into these folders by [FileProviderStorageMigration].
+-->
+<paths>
+    <files-path name="hk_files_media" path="media/" />
+    <cache-path name="hk_cache_invoices" path="invoices/" />
+    <cache-path name="hk_cache_exports" path="exports/" />
+    <cache-path name="hk_cache_business_cards" path="business_cards/" />
+    <cache-path name="hk_cache_salary_slips" path="salary_slips/" />
+    <cache-path name="hk_cache_db_backup" path="db_backup/" />
+    <cache-path name="hk_cache_db_restore" path="db_restore/" />
+    <cache-path name="hk_cache_ocr" path="ocr/" />
+    <external-files-path name="hk_external_shared" path="shared/" />
+</paths>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Phase 7 — TLS / network security policy.
+  Certificate **pins** are applied from OkHttp when BuildConfig.CERT_PINNING_ENABLED is true
+  and real SPKI sha256/… pins are present in cert_pinning.xml (no PLACEHOLDER text).
+
+  Do not add <pin-set> here with fake hashes — it would hard-fail TLS before OkHttp runs.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="false">hisabkitab-production-ceea.up.railway.app</domain>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </domain-config>
+</network-security-config>

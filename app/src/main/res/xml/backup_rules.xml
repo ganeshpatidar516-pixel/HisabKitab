@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Explicit backup policy:
+  - App-level manifest currently sets android:allowBackup="false".
+  - Keep this file explicit (deny-all) to avoid ambiguity if allowBackup policy changes later.
+-->
+<full-backup-content>
+    <exclude domain="root" path="." />
+</full-backup-content>
