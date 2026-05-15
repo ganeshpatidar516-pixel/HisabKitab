@@ -2,6 +2,8 @@
 
 package com.ganesh.hisabkitabpro.ui.suppliers
 
+import com.ganesh.hisabkitabpro.core.security.PrivacySecureEffect
+import com.ganesh.hisabkitabpro.core.storage.OcrBillAttachmentUri
 import com.ganesh.hisabkitabpro.data.prefs.SupplierCreditTermsPrefs
 
 import android.content.ActivityNotFoundException
@@ -113,6 +115,7 @@ fun SupplierLedgerScreen(
     onReminderHistoryClick: () -> Unit = {},
     onReminderControlClick: () -> Unit = {}
 ) {
+    PrivacySecureEffect()
     val context = LocalContext.current
     val colorScheme = MaterialTheme.colorScheme
     val formatter = remember { NumberFormat.getCurrencyInstance(Locale("en", "IN")) }
@@ -322,6 +325,8 @@ fun SupplierLedgerScreen(
                 scheduleSupplierDueReminder(context, supplier.name, amountPaise, dueAt)
                 refreshKey++
                 amountText = ""
+                val savedBillUri = billImageUriText
+                OcrBillAttachmentUri.deleteOwnedFileIfPossible(context, savedBillUri)
                 billImageUriText = ""
             }
         }

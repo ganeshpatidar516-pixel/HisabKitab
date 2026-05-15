@@ -14,6 +14,9 @@ sealed class NetworkResult<out T> {
     object RateLimitReached : NetworkResult<Nothing>()
 }
 
+/** Avoid persisting or logging raw API error bodies (may contain tokens or PII). */
+private fun sanitizedHttpMessage(code: Int): String = "HTTP $code"
+
 suspend fun <T> safeApiCall(
     endpoint: String,
     apiCall: suspend () -> T
@@ -29,17 +32,17 @@ suspend fun <T> safeApiCall(
             }
             NetworkResult.Success(response)
         } catch (throwable: Throwable) {
-            Log.e("SafeApiCall", "API Call failed for $endpoint", throwable)
+            Log.w(
+                "SafeApiCall",
+                "API failed endpoint=$endpoint type=${throwable::class.java.simpleName}",
+            )
             when (throwable) {
                 is IOException -> NetworkResult.NetworkError
                 is HttpException -> {
                     val code = throwable.code()
-                    val errorResponse = throwable.response()?.errorBody()?.string()
-                    NetworkResult.Error(code, errorResponse)
+                    NetworkResult.Error(code, sanitizedHttpMessage(code))
                 }
-                else -> {
-                    NetworkResult.Error(null, throwable.localizedMessage)
-                }
+                else -> NetworkResult.Error(null, null)
             }
         }
     }

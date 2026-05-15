@@ -16,6 +16,7 @@ import com.ganesh.hisabkitabpro.domain.model.BusinessProfile
 import com.ganesh.hisabkitabpro.domain.repository.SettingsRepository
 import com.ganesh.hisabkitabpro.domain.sync.SyncEngine
 import com.ganesh.hisabkitabpro.domain.sync.SyncHealthMonitor
+import com.ganesh.hisabkitabpro.integrity.PlayIntegrityRepository
 import com.ganesh.hisabkitabpro.security.SecurityManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -41,7 +42,8 @@ class SettingsViewModel @Inject constructor(
     private val superCommandFeatureToggle: SuperCommandFeatureToggle,
     private val sharedKhataFeatureToggle: SharedKhataFeatureToggle,
     private val bankAutoSettleFeatureToggle: BankAutoSettleFeatureToggle,
-    private val telemetryFeatureToggle: TelemetryFeatureToggle
+    private val telemetryFeatureToggle: TelemetryFeatureToggle,
+    private val playIntegrityRepository: PlayIntegrityRepository,
 ) : ViewModel() {
 
     private val _syncStatus = MutableStateFlow<String?>(null)
@@ -49,6 +51,9 @@ class SettingsViewModel @Inject constructor(
     val syncHealth: StateFlow<SyncHealthMonitor.SyncHealth> = SyncHealthMonitor.state
     private val _isBiometricEnabled = MutableStateFlow(securityManager.isAppLockEnabled())
     val isBiometricEnabled: StateFlow<Boolean> = _isBiometricEnabled.asStateFlow()
+
+    private val _screenPrivacySecure = MutableStateFlow(securityManager.isScreenPrivacySecureEnabled())
+    val screenPrivacySecure: StateFlow<Boolean> = _screenPrivacySecure.asStateFlow()
 
     private val _sharedKhataEnabled = MutableStateFlow(sharedKhataFeatureToggle.isEnabled())
     val sharedKhataEnabled: StateFlow<Boolean> = _sharedKhataEnabled.asStateFlow()
@@ -182,6 +187,17 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun setScreenPrivacySecureEnabled(enabled: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                securityManager.setScreenPrivacySecureEnabled(enabled)
+                _screenPrivacySecure.value = enabled
+            } catch (e: Exception) {
+                Log.e("SettingsViewModel", "STABILITY_FAIL: Failed to set screen privacy", e)
+            }
+        }
+    }
+
     fun canUseBiometricLock(): Boolean = securityManager.canAuthenticate()
 
     fun updatePin(pin: String) {
@@ -215,6 +231,10 @@ class SettingsViewModel @Inject constructor(
     fun syncData() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
+                playIntegrityRepository.requestAndSubmitToBackend()
+                    .onFailure {
+                        Log.w("SettingsViewModel", "Play Integrity skipped: ${it::class.java.simpleName}")
+                    }
                 val before = SyncEngine.getHealthSnapshot()
                 _syncStatus.value =
                     "Cloud Sync Initiated... Pending: ${before.pendingInDb}, Failed: ${before.failedInDb}, Memory: ${before.queuedInMemory}"

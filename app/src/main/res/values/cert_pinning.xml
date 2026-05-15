@@ -7,7 +7,9 @@
       are ignored until you replace them. Enable pinning via BuildConfig.CERT_PINNING_ENABLED.
     -->
     <string-array name="cert_pin_sha256_pins" translatable="false">
-        <item>sha256/PLACEHOLDER_REPLACE_WITH_LEAF_SPKI_HASH</item>
-        <item>sha256/PLACEHOLDER_REPLACE_WITH_BACKUP_SPKI_HASH</item>
+        <!-- Leaf SPKI for hisabkitab-production-ceea.up.railway.app (May 2026). Re-run scripts/update-cert-pins.ps1 after cert rotation. -->
+        <item>sha256/1UF7u2rF/gMt/exg0vytwI7Y1lh6itDPCKovyHH8Dk0=</item>
+        <!-- Let's Encrypt ISRG Root X1 backup pin -->
+        <item>sha256/C5+lpZ7tcVwmwQIMcRtP6Qt2MRdAuNm+XJlqdwVH3s8=</item>
     </string-array>
 </resources>

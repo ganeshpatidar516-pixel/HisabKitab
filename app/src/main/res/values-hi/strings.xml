@@ -232,6 +232,8 @@
     <string name="settings_enterprise_section_appearance">रूप व भाषा</string>
     <string name="settings_enterprise_section_ai">एआई व स्वचालन</string>
     <string name="settings_enterprise_section_privacy">गोपनीयता व कानूनी</string>
+    <string name="settings_privacy_screen_secure_title">लेजर और बिल पर स्क्रीनशॉट रोकें</string>
+    <string name="settings_privacy_screen_secure_sub">संवेदनशील स्क्रीन को स्क्रीनशॉट और रीसेंट ऐप्स से छिपाता है (अनुशंसित)</string>
     <string name="settings_enterprise_section_help">सहायता</string>
     <string name="settings_enterprise_section_advanced">उन्नत व निदान</string>
     <string name="settings_enterprise_lock_title">ऐप लॉक</string>

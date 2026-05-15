@@ -74,6 +74,7 @@ import com.ganesh.hisabkitabpro.feature.sharedkhata.SharedKhataReadOnlyLinkGener
 import com.ganesh.hisabkitabpro.network.api.SharedKhataLinePayload
 import com.ganesh.hisabkitabpro.network.api.SharedKhataPublishRequestDto
 import com.ganesh.hisabkitabpro.ui.payment.FintechUpiPaymentCard
+import com.ganesh.hisabkitabpro.core.security.PrivacySecureEffect
 import com.ganesh.hisabkitabpro.ui.viewmodel.TransactionViewModel
 import com.ganesh.hisabkitabpro.util.safeClickable
 import com.ganesh.hisabkitabpro.util.WhatsAppBillSender
@@ -100,6 +101,7 @@ fun CustomerLedgerScreen(
     onBulkRemindersClick: () -> Unit = {},
     onAddEntry: (TransactionType) -> Unit
 ) {
+    PrivacySecureEffect()
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()

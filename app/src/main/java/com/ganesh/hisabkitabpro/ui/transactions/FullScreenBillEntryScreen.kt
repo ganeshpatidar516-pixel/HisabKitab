@@ -30,6 +30,7 @@ import com.ganesh.hisabkitabpro.domain.model.BillItem
 import com.ganesh.hisabkitabpro.domain.model.BusinessProfile
 import com.ganesh.hisabkitabpro.domain.model.TransactionType
 import com.ganesh.hisabkitabpro.domain.ledger.InvoicePdfGenerator
+import com.ganesh.hisabkitabpro.core.security.PrivacySecureEffect
 import com.ganesh.hisabkitabpro.ui.viewmodel.TransactionViewModel
 import com.ganesh.hisabkitabpro.util.WhatsAppBillSender
 import android.util.Log
@@ -132,6 +133,7 @@ fun FullScreenBillEntryScreen(
     /** Pops this screen and the add-transaction screen so user returns to ledger. */
     onBillFlowComplete: () -> Unit
 ) {
+    PrivacySecureEffect()
     val context = LocalContext.current
     val primaryColor = if (type == TransactionType.CREDIT) Color(0xFFD32F2F) else Color(0xFF2E7D32)
     val lines = remember { mutableStateListOf<BillLineUi>() }

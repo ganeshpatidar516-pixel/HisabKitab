@@ -16,6 +16,16 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(keystorePropertiesFile.inputStream())
 }
 
+val localPropertiesFile = rootProject.file("local.properties")
+val localProperties = Properties()
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
+}
+fun localProp(key: String, default: String = ""): String =
+    localProperties.getProperty(key)?.trim().orEmpty().ifBlank { default }
+
+val playIntegrityProjectNumber = localProp("play.integrity.cloud.project.number", "0")
+
 android {
     namespace = "com.ganesh.hisabkitabpro"
     compileSdk = 35
@@ -28,10 +38,14 @@ android {
         versionName = "1.0.0"
 
         testInstrumentationRunner = "com.ganesh.hisabkitabpro.HiltTestRunner"
-        // Phase 7: enable only after real SPKI pins replace PLACEHOLDER entries in cert_pinning.xml.
+        // Debug: off (Charles/mitm). Release: on when cert_pinning.xml has real pins (no PLACEHOLDER).
         buildConfigField("Boolean", "CERT_PINNING_ENABLED", "false")
-        // Phase 8: numeric Play Integrity / GCP project number. Use "0" until configured in Gradle/CI.
-        buildConfigField("String", "PLAY_INTEGRITY_CLOUD_PROJECT_NUMBER", "\"0\"")
+        // Set play.integrity.cloud.project.number in local.properties (not committed).
+        buildConfigField(
+            "String",
+            "PLAY_INTEGRITY_CLOUD_PROJECT_NUMBER",
+            "\"$playIntegrityProjectNumber\"",
+        )
         // Business identity Phase 2 stub: asset taxonomy + search UI writing only businessCategory.
         // Enabled for all build types; set to false here to instantly roll back to plain text field.
         buildConfigField("Boolean", "BUSINESS_IDENTITY_TAXONOMY_STUB", "true")
@@ -54,6 +68,7 @@ android {
             isShrinkResources = false
         }
         getByName("release") {
+            buildConfigField("Boolean", "CERT_PINNING_ENABLED", "true")
             // Release hardening: obfuscate code and shrink unused resources.
             isMinifyEnabled = true
             isShrinkResources = true

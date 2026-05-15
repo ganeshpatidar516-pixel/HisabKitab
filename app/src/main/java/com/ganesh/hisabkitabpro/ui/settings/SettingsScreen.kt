@@ -79,6 +79,7 @@ fun SettingsScreen(
     val sharedKhataEnabled by viewModel.sharedKhataEnabled.collectAsState()
     val bankAutoSettleEnabled by viewModel.bankAutoSettleEnabled.collectAsState()
     val superCommandEnabled by viewModel.superCommandEnabled.collectAsState()
+    val screenPrivacySecure by viewModel.screenPrivacySecure.collectAsState()
     val crashReportingEnabled by viewModel.crashReportingEnabled.collectAsState()
     val analyticsEnabled by viewModel.analyticsEnabled.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -305,6 +306,16 @@ fun SettingsScreen(
 
             item {
                 EnterpriseSectionHeader(stringResource(R.string.settings_enterprise_section_privacy))
+                SettingsToggleItem(
+                    title = stringResource(R.string.settings_privacy_screen_secure_title),
+                    description = stringResource(R.string.settings_privacy_screen_secure_sub),
+                    icon = Icons.Default.VisibilityOff,
+                    isSelected = screenPrivacySecure,
+                    onCheckedChange = { enabled ->
+                        viewModel.setScreenPrivacySecureEnabled(enabled)
+                        performHapticFeedback(context)
+                    },
+                )
                 SettingsItem(
                     title = stringResource(R.string.settings_privacy_data_title),
                     description = stringResource(R.string.settings_enterprise_sub_privacy_data),

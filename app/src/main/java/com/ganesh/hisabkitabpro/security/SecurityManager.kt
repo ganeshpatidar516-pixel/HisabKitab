@@ -17,6 +17,8 @@ class SecurityManager @Inject constructor(
 ) {
     companion object {
         private const val KEY_APP_LOCK_ENABLED = "app_lock_enabled"
+        /** Blocks screenshots on ledger/OCR/bill screens (default on). */
+        const val KEY_SCREEN_PRIVACY_SECURE = "screen_privacy_secure_enabled"
     }
 
     fun isAppLockEnabled(): Boolean {
@@ -25,6 +27,14 @@ class SecurityManager @Inject constructor(
 
     fun setAppLockEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_APP_LOCK_ENABLED, enabled).apply()
+    }
+
+    fun isScreenPrivacySecureEnabled(): Boolean {
+        return prefs.getBoolean(KEY_SCREEN_PRIVACY_SECURE, true)
+    }
+
+    fun setScreenPrivacySecureEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_SCREEN_PRIVACY_SECURE, enabled).apply()
     }
 
     fun hashPin(pin: String): String {

@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import androidx.work.WorkManager
+import com.ganesh.hisabkitabpro.core.storage.AppStoragePaths
 import com.ganesh.hisabkitabpro.data.local.AppDatabase
 import com.ganesh.hisabkitabpro.domain.sync.SyncWorker
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -52,8 +53,17 @@ class UserDataErasureEngine @Inject constructor(
 
     private fun wipeKnownCacheArtifacts(context: Context) {
         val cache = context.cacheDir
-        File(cache, "business_cards").deleteRecursivelyQuietly()
-        File(cache, "db_backup").deleteRecursivelyQuietly()
+        listOf(
+            "business_cards",
+            "db_backup",
+            "db_restore",
+            "invoices",
+            "exports",
+            "ocr",
+            "salary_slips",
+        ).forEach { name ->
+            File(cache, name).deleteRecursivelyQuietly()
+        }
         cache.listFiles()?.forEach { f ->
             if (f.isFile && f.name.startsWith(WHATSAPP_SHOWCASE_PREFIX)) {
                 runCatching { f.delete() }
@@ -61,6 +71,15 @@ class UserDataErasureEngine @Inject constructor(
         }
         context.externalCacheDir?.let { ext ->
             File(ext, "business_cards").deleteRecursivelyQuietly()
+        }
+        AppStoragePaths.mediaRoot(context).deleteRecursivelyQuietly()
+        context.getExternalFilesDir(null)?.let { extFiles ->
+            File(extFiles, "shared").deleteRecursivelyQuietly()
+            extFiles.listFiles()?.forEach { f ->
+                if (f.isFile && f.name.startsWith("INV_")) {
+                    runCatching { f.delete() }
+                }
+            }
         }
     }
 

@@ -71,6 +71,8 @@ import com.ganesh.hisabkitabpro.R
 import com.ganesh.hisabkitabpro.core.storage.AppStoragePaths
 import com.ganesh.hisabkitabpro.domain.ocr.AutoBillOcrResult
 import com.ganesh.hisabkitabpro.domain.ocr.BillAmountConfidence
+import com.ganesh.hisabkitabpro.core.security.PrivacySecureEffect
+import com.ganesh.hisabkitabpro.core.storage.OcrBillAttachmentUri
 import com.ganesh.hisabkitabpro.domain.ocr.OCRBillProcessor
 import com.ganesh.hisabkitabpro.domain.ocr.OcrDecodeForOcrResult
 import com.ganesh.hisabkitabpro.domain.ocr.OcrGalleryImportCopy
@@ -142,7 +144,7 @@ private suspend fun runBillOcrFromDecodedBitmap(
             BillOcrUiOutcome.PrefillReady(
                 amountKeypadText = amt,
                 note = noteLine,
-                billImageUri = persistedJpegFile?.let { Uri.fromFile(it).toString() },
+                billImageUri = persistedJpegFile?.let { OcrBillAttachmentUri.fromCacheFile(context, it) },
                 lowConfidence = snap.amountConfidence == BillAmountConfidence.LOW,
             )
         } else {
@@ -211,6 +213,7 @@ fun OCRScannerScreen(
     onResult: (String) -> Unit = {},
     onNavigateBack: () -> Unit
 ) {
+    PrivacySecureEffect()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val coroutineScope = rememberCoroutineScope()

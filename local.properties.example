@@ -1,0 +1,5 @@
+# Copy to local.properties (gitignored). Do not commit secrets.
+sdk.dir=C\:\\Users\\YOUR_USER\\AppData\\Local\\Android\\Sdk
+
+# Play Integrity — numeric GCP / Play Console project number (Phase 8).
+play.integrity.cloud.project.number=0

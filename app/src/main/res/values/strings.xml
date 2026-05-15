@@ -391,6 +391,8 @@
     <string name="settings_enterprise_section_appearance">Appearance</string>
     <string name="settings_enterprise_section_ai">AI &amp; automation</string>
     <string name="settings_enterprise_section_privacy">Privacy &amp; legal</string>
+    <string name="settings_privacy_screen_secure_title">Block screenshots on ledger &amp; bills</string>
+    <string name="settings_privacy_screen_secure_sub">Hides sensitive screens from screenshots and recent apps (recommended)</string>
     <string name="settings_enterprise_section_help">Help</string>
     <string name="settings_enterprise_section_advanced">Advanced &amp; diagnostics</string>
     <string name="settings_enterprise_lock_title">App lock</string>
