@@ -30,6 +30,7 @@ import com.ganesh.hisabkitabpro.domain.model.BillItem
 import com.ganesh.hisabkitabpro.domain.model.BusinessProfile
 import com.ganesh.hisabkitabpro.domain.model.TransactionType
 import com.ganesh.hisabkitabpro.domain.ledger.InvoicePdfGenerator
+import com.ganesh.hisabkitabpro.core.firebase.ProductionOpsTelemetry
 import com.ganesh.hisabkitabpro.core.security.PrivacySecureEffect
 import com.ganesh.hisabkitabpro.ui.viewmodel.TransactionViewModel
 import com.ganesh.hisabkitabpro.util.WhatsAppBillSender
@@ -341,6 +342,12 @@ fun FullScreenBillEntryScreen(
                                             .takeIf { it.exists() && it.length() > 0L }
                                     if (pdfFile == null) {
                                         Log.w("HK_BillShare", "Bill saved but PDF missing for txnId=${r.transactionId}")
+                                        ProductionOpsTelemetry.recordBillPdfNotReady(
+                                            context,
+                                            transactionId = r.transactionId,
+                                            billId = r.billId,
+                                            source = "ui_pdf_missing",
+                                        )
                                         Toast.makeText(
                                             context,
                                             "Bill saved. PDF not ready to share — open ledger and use Share.",

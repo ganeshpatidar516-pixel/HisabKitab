@@ -1,0 +1,56 @@
+# Safe default: debug build + unit tests. No signing secrets required.
+# Release compile is manual (workflow_dispatch) — no keystore in CI.
+name: Android Build
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Assemble debug
+        run: ./gradlew :app:assembleDebug --no-daemon
+
+      - name: Unit tests
+        run: ./gradlew :app:testDebugUnitTest --no-daemon
+
+      - name: Sync domain unit tests
+        run: ./gradlew :app:testDebugUnitTest --tests "com.ganesh.hisabkitabpro.domain.sync.*" --no-daemon
+
+  release-compile:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Sync domain unit tests
+        run: ./gradlew :app:testDebugUnitTest --tests "com.ganesh.hisabkitabpro.domain.sync.*" --no-daemon
+
+      - name: Compile release (no signing secrets)
+        run: ./gradlew :app:assembleRelease --no-daemon

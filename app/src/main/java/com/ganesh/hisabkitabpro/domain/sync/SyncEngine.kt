@@ -2,6 +2,7 @@ package com.ganesh.hisabkitabpro.domain.sync
 
 import android.content.Context
 import android.util.Log
+import com.ganesh.hisabkitabpro.core.firebase.ProductionOpsTelemetry
 import com.ganesh.hisabkitabpro.di.SyncCloudMirrorEntryPoint
 import dagger.hilt.android.EntryPointAccessors
 import com.ganesh.hisabkitabpro.data.repository.local.SyncDao
@@ -285,7 +286,14 @@ object SyncEngine {
             EntryPointAccessors.fromApplication(ctx, SyncCloudMirrorEntryPoint::class.java)
                 .selectiveCloudMirror()
                 .mirrorTransaction(txn)
-        }.onFailure { Log.w(TAG, "Post-upload transaction mirror failed", it) }
+        }.onFailure {
+            Log.w(TAG, "Post-upload transaction mirror failed", it)
+            ProductionOpsTelemetry.recordSyncCloudMirrorFailure(
+                ctx,
+                entityType = "TRANSACTION",
+                reason = it.message.orEmpty(),
+            )
+        }
     }
 
     private fun mirrorCustomerAfterFastApiSuccess(payload: String) {
@@ -295,7 +303,14 @@ object SyncEngine {
             EntryPointAccessors.fromApplication(ctx, SyncCloudMirrorEntryPoint::class.java)
                 .selectiveCloudMirror()
                 .mirrorCustomer(customer)
-        }.onFailure { Log.w(TAG, "Post-upload customer mirror failed", it) }
+        }.onFailure {
+            Log.w(TAG, "Post-upload customer mirror failed", it)
+            ProductionOpsTelemetry.recordSyncCloudMirrorFailure(
+                ctx,
+                entityType = "CUSTOMER",
+                reason = it.message.orEmpty(),
+            )
+        }
     }
 
     /* ---------------- Per-type uploaders ---------------- */

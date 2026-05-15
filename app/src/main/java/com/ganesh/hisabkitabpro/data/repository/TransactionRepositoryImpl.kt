@@ -24,6 +24,7 @@ import com.ganesh.hisabkitabpro.domain.backup.CloudBackupManager
 import com.ganesh.hisabkitabpro.domain.cloud.SelectiveCloudMirror
 import com.ganesh.hisabkitabpro.core.storage.AtomicFileWrites
 import com.ganesh.hisabkitabpro.domain.ledger.InvoicePdfGenerator
+import com.ganesh.hisabkitabpro.core.firebase.ProductionOpsTelemetry
 import com.ganesh.hisabkitabpro.domain.sync.SyncEngine
 import com.ganesh.hisabkitabpro.addon.audit.AuditLogRecorder
 import com.ganesh.hisabkitabpro.addon.reminder.CustomerPaymentReminderScheduler
@@ -335,6 +336,14 @@ class TransactionRepositoryImpl @Inject constructor(
             val pdfReady = withContext(Dispatchers.IO) {
                 generatePdfForTransaction(result.second) != null
             }
+            if (!pdfReady) {
+                ProductionOpsTelemetry.recordBillPdfNotReady(
+                    context,
+                    transactionId = result.second,
+                    billId = result.first,
+                    source = "createBill",
+                )
+            }
             Result.success(
                 CreateBillResult(
                     billId = result.first,
@@ -416,6 +425,14 @@ class TransactionRepositoryImpl @Inject constructor(
                     settingsGstRatePercent = settingsGstRatePercent,
                 )
                 itemizedOk || generatePdfForTransaction(result.second) != null
+            }
+            if (!pdfReady) {
+                ProductionOpsTelemetry.recordBillPdfNotReady(
+                    context,
+                    transactionId = result.second,
+                    billId = result.first,
+                    source = "createBillWithLineItems",
+                )
             }
             Result.success(
                 CreateBillResult(
