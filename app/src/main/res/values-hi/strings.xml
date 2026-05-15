@@ -46,6 +46,9 @@
     <string name="ledger_empty_transactions">अभी कोई लेनदेन नहीं</string>
     <string name="customer_list_empty">अभी कोई ग्राहक नहीं — पहला ग्राहक जोड़ने के लिए + दबाएँ</string>
     <string name="settings_sync_in_progress">क्लाउड पर सिंक हो रहा है…</string>
+    <string name="settings_balance_cache_auto_repair_title">बैलेंस कैश ऑटो-रिपेयर</string>
+    <string name="settings_balance_cache_auto_repair_desc">ऐप शुरू पर, लेजर के हिसाब से ग्राहक बैलेंस मिलाएं (लेनदेन नहीं बदलते)।</string>
+    <string name="settings_balance_cache_repair_now">अभी बैलेंस जाँचें और ठीक करें</string>
     <string name="common_save">सेव करें</string>
     <string name="common_cancel">रद्द करें</string>
     <string name="supplier_more_tools">अधिक टूल्स</string>

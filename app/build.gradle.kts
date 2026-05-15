@@ -25,6 +25,10 @@ fun localProp(key: String, default: String = ""): String =
     localProperties.getProperty(key)?.trim().orEmpty().ifBlank { default }
 
 val playIntegrityProjectNumber = localProp("play.integrity.cloud.project.number", "0")
+val defaultApiBaseUrl = "https://hisabkitab-production-ceea.up.railway.app/"
+val apiBaseUrl = localProp("api.base.url", defaultApiBaseUrl).let { raw ->
+    if (raw.endsWith("/")) raw else "$raw/"
+}
 
 android {
     namespace = "com.ganesh.hisabkitabpro"
@@ -49,6 +53,9 @@ android {
         // Business identity Phase 2 stub: asset taxonomy + search UI writing only businessCategory.
         // Enabled for all build types; set to false here to instantly roll back to plain text field.
         buildConfigField("Boolean", "BUSINESS_IDENTITY_TAXONOMY_STUB", "true")
+        buildConfigField("String", "BASE_URL", "\"$apiBaseUrl\"")
+        // Phase-8 P2: opt-in balance cache repair (Settings toggle); compile-time kill-switch.
+        buildConfigField("Boolean", "BALANCE_CACHE_AUTO_REPAIR_ALLOWED", "true")
     }
 
     signingConfigs {

@@ -11,6 +11,9 @@ import com.ganesh.hisabkitabpro.feature.sharedkhata.SharedKhataAccessManager
 import com.ganesh.hisabkitabpro.feature.sharedkhata.SharedKhataFeatureToggle
 import com.ganesh.hisabkitabpro.feature.telemetry.TelemetryFeatureToggle
 import com.ganesh.hisabkitabpro.core.locale.AppLocaleManager
+import com.ganesh.hisabkitabpro.data.local.AppDatabase
+import com.ganesh.hisabkitabpro.domain.ledger.BalanceCacheReconciler
+import com.ganesh.hisabkitabpro.domain.ledger.BalanceCacheRepairToggle
 import com.ganesh.hisabkitabpro.domain.model.AppSettings
 import com.ganesh.hisabkitabpro.domain.model.BusinessProfile
 import com.ganesh.hisabkitabpro.domain.repository.SettingsRepository
@@ -44,7 +47,12 @@ class SettingsViewModel @Inject constructor(
     private val bankAutoSettleFeatureToggle: BankAutoSettleFeatureToggle,
     private val telemetryFeatureToggle: TelemetryFeatureToggle,
     private val playIntegrityRepository: PlayIntegrityRepository,
+    private val database: AppDatabase,
+    private val balanceCacheRepairToggle: BalanceCacheRepairToggle,
 ) : ViewModel() {
+
+    val balanceCacheRepairFeatureAvailable: Boolean =
+        balanceCacheRepairToggle.isFeatureAvailable()
 
     private val _syncStatus = MutableStateFlow<String?>(null)
     val syncStatus: StateFlow<String?> = _syncStatus.asStateFlow()
@@ -69,6 +77,10 @@ class SettingsViewModel @Inject constructor(
 
     private val _analyticsEnabled = MutableStateFlow(telemetryFeatureToggle.isAnalyticsEnabled())
     val analyticsEnabled: StateFlow<Boolean> = _analyticsEnabled.asStateFlow()
+
+    private val _balanceCacheAutoRepairEnabled =
+        MutableStateFlow(balanceCacheRepairToggle.isAutoRepairEnabled())
+    val balanceCacheAutoRepairEnabled: StateFlow<Boolean> = _balanceCacheAutoRepairEnabled.asStateFlow()
 
     val settings: StateFlow<AppSettings?> = repository.getSettings()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -296,6 +308,31 @@ class SettingsViewModel @Inject constructor(
 
     fun clearSyncStatus() {
         _syncStatus.value = null
+    }
+
+    fun setBalanceCacheAutoRepairEnabled(enabled: Boolean) {
+        balanceCacheRepairToggle.setAutoRepairEnabled(enabled)
+        _balanceCacheAutoRepairEnabled.value = balanceCacheRepairToggle.isAutoRepairEnabled()
+    }
+
+    fun runBalanceCacheRepairNow() {
+        viewModelScope.launch {
+            _syncStatus.value = "Checking balances…"
+            try {
+                val report = withContext(Dispatchers.IO) {
+                    BalanceCacheReconciler.repairDriftNow(appContext, database)
+                }
+                _syncStatus.value = when {
+                    report.repairedCount > 0 ->
+                        "Repaired ${report.repairedCount} customer balance(s)."
+                    report.driftCount == 0 ->
+                        "All checked balances match ledger."
+                    else -> "No repair needed."
+                }
+            } catch (e: Exception) {
+                _syncStatus.value = "Balance repair failed: ${e.message}"
+            }
+        }
     }
 
     fun setSharedKhataEnabled(enabled: Boolean): Boolean {

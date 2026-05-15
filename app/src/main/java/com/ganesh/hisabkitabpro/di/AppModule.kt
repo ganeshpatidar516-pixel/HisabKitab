@@ -3,6 +3,7 @@ package com.ganesh.hisabkitabpro.di
 import android.content.Context
 import android.content.SharedPreferences
 import com.ganesh.hisabkitabpro.commandos.SuperCommandFeatureToggle
+import com.ganesh.hisabkitabpro.domain.ledger.BalanceCacheRepairToggle
 import com.ganesh.hisabkitabpro.feature.banksettle.BankAutoSettleFeatureToggle
 import com.ganesh.hisabkitabpro.feature.sharedkhata.SharedKhataFeatureToggle
 import com.ganesh.hisabkitabpro.feature.telemetry.TelemetryFeatureToggle
@@ -145,6 +146,12 @@ object AppModule {
     ): TelemetryFeatureToggle {
         return TelemetryFeatureToggle(prefs)
     }
+
+    @Provides
+    @Singleton
+    fun provideBalanceCacheRepairToggle(
+        prefs: SharedPreferences,
+    ): BalanceCacheRepairToggle = BalanceCacheRepairToggle(prefs)
 
     @Provides
     @Singleton

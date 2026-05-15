@@ -272,6 +272,16 @@ object SyncEngine {
             finishedAt = System.currentTimeMillis()
         )
         SyncHealthMonitor.onCycleComplete(report)
+        if (report.permanentFailures > 0 || report.authExpired) {
+            appContext?.let {
+                ProductionOpsTelemetry.recordSyncCycleDegraded(
+                    it,
+                    permanentFailures = report.permanentFailures,
+                    authExpired = report.authExpired,
+                    attempted = report.attempted,
+                )
+            }
+        }
         if (succeeded > 0) {
             runCatching { dao.clearSynced() }
                 .onFailure { Log.w(TAG, "clearSynced housekeeping failed", it) }

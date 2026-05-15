@@ -35,6 +35,16 @@ powershell -ExecutionPolicy Bypass -File ".\scripts\release_validation_gate.ps1"
 
 Keep the log with the AAB you upload.
 
+## API base URL override (dev/staging)
+
+Optional in `local.properties` (not committed):
+
+```properties
+api.base.url=https://your-staging-host.example/
+```
+
+Rebuild after change. If the host differs from production, update certificate pins via `scripts/update-cert-pins.ps1` before release builds.
+
 ## Certificate pinning (release)
 
 Release builds enable TLS pinning (`CERT_PINNING_ENABLED=true`). After **Railway / API cert rotation**:
@@ -53,7 +63,9 @@ When crash reporting is ON in Settings, non-fatals include:
 |--------|---------|
 | `bill_pdf_not_ready` | Bill saved; PDF generation failed or share file missing |
 | `sync_cloud_mirror_failed` | FastAPI sync OK but Firestore re-mirror failed |
-| `balance_cache_drift` | SQL balance ≠ `balanceCache` (log-only repair policy) |
+| `balance_cache_drift` | SQL balance ≠ `balanceCache` (detect-only unless auto-repair ON) |
+| `balance_cache_repaired` | Opt-in or manual repair aligned cache to SQL sum |
+| `sync_cycle_degraded` | Sync cycle had permanent failures or auth expired |
 
 ## Scope lock
 

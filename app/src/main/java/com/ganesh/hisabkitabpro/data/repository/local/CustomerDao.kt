@@ -120,4 +120,15 @@ interface CustomerDao {
 
     @Query("UPDATE customers SET balanceCache = balanceCache + :delta, updatedAt = :timestamp WHERE id = :customerId")
     suspend fun updateBalanceCache(customerId: Long, delta: Long, timestamp: Long = System.currentTimeMillis())
+
+    /** Phase-8 P2 — absolute repair only; used when SQL sum disagrees with balanceCache. */
+    @Query(
+        "UPDATE customers SET balanceCache = :balancePaise, updatedAt = :timestamp " +
+            "WHERE id = :customerId AND isDeleted = 0",
+    )
+    suspend fun setBalanceCacheAbsolute(
+        customerId: Long,
+        balancePaise: Long,
+        timestamp: Long = System.currentTimeMillis(),
+    )
 }

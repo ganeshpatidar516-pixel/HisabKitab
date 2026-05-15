@@ -49,6 +49,7 @@ import com.ganesh.hisabkitabpro.core.locale.IndianLanguageCatalog
 import com.ganesh.hisabkitabpro.domain.support.AppShareActions
 import com.ganesh.hisabkitabpro.ui.auth.AccountSettingsSection
 import com.ganesh.hisabkitabpro.domain.sync.SyncHealthMonitor
+import com.ganesh.hisabkitabpro.BuildConfig
 import com.ganesh.hisabkitabpro.ui.viewmodel.SettingsViewModel
 import com.ganesh.hisabkitabpro.ui.viewmodel.TransactionViewModel
 import com.ganesh.hisabkitabpro.ui.theme.*
@@ -534,6 +535,7 @@ fun SettingsCloudScreen(
 ) {
     val syncStatus by viewModel.syncStatus.collectAsState()
     val syncHealth by viewModel.syncHealth.collectAsState()
+    val balanceCacheAutoRepair by viewModel.balanceCacheAutoRepairEnabled.collectAsState()
     val scope = rememberCoroutineScope()
     val colorScheme = MaterialTheme.colorScheme
     Scaffold(
@@ -657,6 +659,29 @@ fun SettingsCloudScreen(
                             stringResource(R.string.settings_enterprise_sync_retry),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+                if (BuildConfig.BALANCE_CACHE_AUTO_REPAIR_ALLOWED) {
+                    SettingsToggleItem(
+                        title = stringResource(R.string.settings_balance_cache_auto_repair_title),
+                        description = stringResource(R.string.settings_balance_cache_auto_repair_desc),
+                        icon = Icons.Default.Build,
+                        isSelected = balanceCacheAutoRepair,
+                        onCheckedChange = { viewModel.setBalanceCacheAutoRepairEnabled(it) },
+                    )
+                    OutlinedButton(
+                        onClick = { viewModel.runBalanceCacheRepairNow() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 6.dp),
+                        border = BorderStroke(1.dp, colorScheme.outline.copy(alpha = 0.35f)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = colorScheme.onSurface),
+                    ) {
+                        Text(
+                            stringResource(R.string.settings_balance_cache_repair_now),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
                         )
                     }
                 }

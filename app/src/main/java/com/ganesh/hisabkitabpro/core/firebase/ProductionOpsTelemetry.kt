@@ -32,6 +32,41 @@ object ProductionOpsTelemetry {
         )
     }
 
+    fun recordSyncCycleDegraded(
+        context: Context,
+        permanentFailures: Int,
+        authExpired: Boolean,
+        attempted: Int,
+    ) {
+        if (permanentFailures <= 0 && !authExpired) return
+        Log.w(
+            TAG,
+            "sync_cycle_degraded permanent=$permanentFailures authExpired=$authExpired attempted=$attempted",
+        )
+        recordNonFatal(
+            context,
+            signal = "sync_cycle_degraded",
+            keys = mapOf(
+                "sync_cycle_degraded" to true,
+                "sync_cycle_permanent_failures" to permanentFailures,
+                "sync_cycle_auth_expired" to authExpired,
+                "sync_cycle_attempted" to attempted,
+            ),
+        )
+    }
+
+    fun recordBalanceCacheRepaired(context: Context, repairedCount: Int) {
+        Log.i(TAG, "balance_cache_repaired count=$repairedCount")
+        recordNonFatal(
+            context,
+            signal = "balance_cache_repaired",
+            keys = mapOf(
+                "balance_cache_repaired" to true,
+                "balance_cache_repaired_count" to repairedCount,
+            ),
+        )
+    }
+
     fun recordSyncCloudMirrorFailure(
         context: Context,
         entityType: String,

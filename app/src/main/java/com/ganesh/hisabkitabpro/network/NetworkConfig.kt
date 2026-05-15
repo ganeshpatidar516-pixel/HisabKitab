@@ -1,6 +1,8 @@
 package com.ganesh.hisabkitabpro.network
 
+import com.ganesh.hisabkitabpro.BuildConfig
+
 object NetworkConfig {
-    // Single source of truth for production API endpoint.
-    const val BASE_URL = "https://hisabkitab-production-ceea.up.railway.app/"
+    /** Override via `api.base.url` in local.properties (dev/staging); defaults to production Railway. */
+    val BASE_URL: String = BuildConfig.BASE_URL
 }

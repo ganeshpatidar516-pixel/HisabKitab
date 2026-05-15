@@ -19,6 +19,7 @@ import com.ganesh.hisabkitabpro.data.local.AppDatabase
 import com.ganesh.hisabkitabpro.data.migration.SupplierPartyCityBackfill
 import com.ganesh.hisabkitabpro.addon.reminder.ReminderEngine
 import com.ganesh.hisabkitabpro.domain.ledger.BalanceCacheReconciler
+import com.ganesh.hisabkitabpro.domain.ledger.BalanceCacheRepairToggle
 import com.ganesh.hisabkitabpro.domain.sync.SyncEngine
 import com.ganesh.hisabkitabpro.domain.sync.SyncWorker
 import dagger.hilt.android.HiltAndroidApp
@@ -100,10 +101,18 @@ class HisabKitabApp : Application() {
                 database.openHelper.writableDatabase.query("SELECT 1").use { c ->
                     c.moveToFirst()
                 }
+                val balanceRepairToggle = BalanceCacheRepairToggle(
+                    getSharedPreferences("hisabkitab_prefs", MODE_PRIVATE),
+                )
                 BalanceCacheReconciler.logDriftIfAny(
                     appContext = this@HisabKitabApp,
                     customerDao = database.customerDao(),
                     transactionDao = database.transactionDao(),
+                )
+                BalanceCacheReconciler.repairDriftIfEnabled(
+                    appContext = this@HisabKitabApp,
+                    database = database,
+                    toggle = balanceRepairToggle,
                 )
             } catch (e: Exception) {
                 Log.w("HisabKitabApp", "DB pre-warm skipped", e)
