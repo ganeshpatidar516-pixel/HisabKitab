@@ -46,8 +46,10 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.collectAsState
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import com.ganesh.hisabkitabpro.ui.common.PagingListStateOverlay
 import com.ganesh.hisabkitabpro.R
 import com.ganesh.hisabkitabpro.addon.audit.AuditLogEntry
 import com.ganesh.hisabkitabpro.addon.reminder.AutoReminderChannel
@@ -117,6 +119,8 @@ fun CustomerLedgerScreen(
     val pagedTransactions = remember(customer.id) { 
         transactionViewModel.getTransactionsByCustomerPaged(customer.id) 
     }.collectAsLazyPagingItems()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val loadErrorMessage = stringResource(R.string.common_load_error)
     val liveCustomer by customerViewModel.getCustomerByIdFlow(customer.id)
         .collectAsStateWithLifecycle(initialValue = customer)
     val netBalancePaise = liveCustomer?.balanceCache ?: customer.balanceCache
@@ -414,8 +418,15 @@ fun CustomerLedgerScreen(
         }
     }
 
+    LaunchedEffect(pagedTransactions.loadState.append) {
+        if (pagedTransactions.loadState.append is LoadState.Error) {
+            snackbarHostState.showSnackbar(loadErrorMessage)
+        }
+    }
+
     Scaffold(
         containerColor = Color.White,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -621,7 +632,38 @@ fun CustomerLedgerScreen(
                         )
                     }
                 }
+
+                when (pagedTransactions.loadState.append) {
+                    is LoadState.Loading -> {
+                        item {
+                            Box(
+                                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                CircularProgressIndicator(modifier = Modifier.size(28.dp))
+                            }
+                        }
+                    }
+                    is LoadState.Error -> {
+                        item {
+                            TextButton(
+                                onClick = { pagedTransactions.retry() },
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Text(stringResource(R.string.common_retry))
+                            }
+                        }
+                    }
+                    else -> Unit
+                }
             }
+
+            PagingListStateOverlay(
+                itemCount = pagedTransactions.itemCount,
+                refreshLoadState = pagedTransactions.loadState.refresh,
+                onRetry = { pagedTransactions.retry() },
+                emptyMessage = stringResource(R.string.ledger_empty_transactions),
+            )
 
             pendingDelete?.let { tx ->
                 AlertDialog(

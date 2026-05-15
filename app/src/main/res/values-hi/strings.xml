@@ -40,6 +40,12 @@
     <string name="supplier_bill_attached">बिल संलग्न है</string>
     <string name="supplier_preview">प्रीव्यू</string>
     <string name="common_close">बंद करें</string>
+    <string name="common_load_error">डेटा लोड नहीं हो सका। कनेक्शन जाँचें और फिर कोशिश करें।</string>
+    <string name="common_retry">फिर कोशिश करें</string>
+    <string name="common_save_failed">सेव नहीं हो सका। कृपया फिर कोशिश करें।</string>
+    <string name="ledger_empty_transactions">अभी कोई लेनदेन नहीं</string>
+    <string name="customer_list_empty">अभी कोई ग्राहक नहीं — पहला ग्राहक जोड़ने के लिए + दबाएँ</string>
+    <string name="settings_sync_in_progress">क्लाउड पर सिंक हो रहा है…</string>
     <string name="common_save">सेव करें</string>
     <string name="common_cancel">रद्द करें</string>
     <string name="supplier_more_tools">अधिक टूल्स</string>
@@ -196,8 +202,8 @@
     <string name="supplier_share_outstanding_message">बकाया %1$s — यहाँ कन्फर्म करें: %2$s</string>
     <string name="dashboard_title">हिसाब किताब प्रो</string>
     <string name="dashboard_subtitle">आपके व्यवसाय का त्वरित सारांश</string>
-    <string name="dashboard_action_add">जोड़ें</string>
-    <string name="dashboard_action_bill">बिल</string>
+    <string name="dashboard_action_add">ग्राहक</string>
+    <string name="dashboard_action_bill">बिल (ग्राहक)</string>
     <string name="dashboard_action_scan">स्कैन</string>
     <string name="dashboard_action_voice">वॉइस</string>
     <!-- Legacy visiting_* form strings were purged with the 50-template procedural engine rebuild. -->

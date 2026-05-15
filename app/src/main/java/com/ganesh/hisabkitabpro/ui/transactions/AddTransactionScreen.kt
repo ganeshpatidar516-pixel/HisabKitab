@@ -26,6 +26,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import com.ganesh.hisabkitabpro.R
 import com.ganesh.hisabkitabpro.domain.model.TransactionType
 import com.ganesh.hisabkitabpro.ui.viewmodel.TransactionViewModel
@@ -49,6 +50,10 @@ fun AddTransactionScreen(
     onOpenFullBill: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val colorScheme = MaterialTheme.colorScheme
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val saveFailedMessage = stringResource(R.string.common_save_failed)
     var amountText by rememberSaveable { mutableStateOf("0") }
     var note by rememberSaveable { mutableStateOf("") }
     var showOcrLowConfidenceBanner by remember { mutableStateOf(false) }
@@ -101,6 +106,7 @@ fun AddTransactionScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { 
@@ -110,7 +116,12 @@ fun AddTransactionScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.settings_back),
+                        )
+                    }
                 }
             )
         }
@@ -119,7 +130,7 @@ fun AddTransactionScreen(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
+                .background(colorScheme.background)
         ) {
         Column(modifier = Modifier.fillMaxSize()) {
             
@@ -127,11 +138,15 @@ fun AddTransactionScreen(
             Card(
                 modifier = Modifier.padding(16.dp).fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Enter Amount (Rupees)", fontSize = 14.sp, color = Color.Gray)
+                    Text(
+                        "Enter Amount (Rupees)",
+                        fontSize = 14.sp,
+                        color = colorScheme.onSurfaceVariant,
+                    )
                     if (showOcrLowConfidenceBanner) {
                         Text(
                             text = stringResource(R.string.ocr_low_confidence_banner),
@@ -181,13 +196,25 @@ fun AddTransactionScreen(
                     },
                     label = { Text("Voice") },
                     leadingIcon = { Icon(Icons.Default.Mic, null, Modifier.size(18.dp)) },
-                    colors = AssistChipDefaults.assistChipColors(labelColor = Color(0xFF1A237E), leadingIconContentColor = Color(0xFF1A237E))
+                    colors = AssistChipDefaults.assistChipColors(
+                        labelColor = colorScheme.primary,
+                        leadingIconContentColor = colorScheme.primary,
+                    )
                 )
                 AssistChip(
                     onClick = { onOpenScanBill() },
                     label = { Text("Scan Bill") },
-                    leadingIcon = { Icon(Icons.Default.QrCodeScanner, null, Modifier.size(18.dp)) },
-                    colors = AssistChipDefaults.assistChipColors(labelColor = Color(0xFF1A237E), leadingIconContentColor = Color(0xFF1A237E))
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.QrCodeScanner,
+                            contentDescription = stringResource(R.string.dashboard_action_scan),
+                            modifier = Modifier.size(18.dp),
+                        )
+                    },
+                    colors = AssistChipDefaults.assistChipColors(
+                        labelColor = colorScheme.primary,
+                        leadingIconContentColor = colorScheme.primary,
+                    )
                 )
             }
 
@@ -195,7 +222,7 @@ fun AddTransactionScreen(
 
             // ⌨️ Keypad & Confirm
             Surface(
-                color = Color.White,
+                color = colorScheme.surface,
                 shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
                 shadowElevation = 8.dp
             ) {
@@ -205,7 +232,10 @@ fun AddTransactionScreen(
                         Button(
                             onClick = onOpenFullBill,
                             modifier = Modifier.weight(1f).height(56.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray, contentColor = Color.Black),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colorScheme.surfaceVariant,
+                                contentColor = colorScheme.onSurface,
+                            ),
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text("Create Bill")
@@ -228,7 +258,12 @@ fun AddTransactionScreen(
                                             saving = false
                                             onTransactionAdded()
                                         },
-                                        onError = { saving = false },
+                                        onError = {
+                                            saving = false
+                                            scope.launch {
+                                                snackbarHostState.showSnackbar(saveFailedMessage)
+                                            }
+                                        },
                                     )
                                 }
                             },
@@ -281,7 +316,7 @@ fun KeyItem(text: String, modifier: Modifier, onClick: () -> Unit) {
         if (text == "DEL") {
             Icon(Icons.AutoMirrored.Filled.Backspace, null, tint = Color.Red)
         } else {
-            Text(text, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Text(text, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
         }
     }
 }

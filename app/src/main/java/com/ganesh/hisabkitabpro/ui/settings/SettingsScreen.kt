@@ -48,6 +48,7 @@ import com.ganesh.hisabkitabpro.core.locale.AppLocaleManager
 import com.ganesh.hisabkitabpro.core.locale.IndianLanguageCatalog
 import com.ganesh.hisabkitabpro.domain.support.AppShareActions
 import com.ganesh.hisabkitabpro.ui.auth.AccountSettingsSection
+import com.ganesh.hisabkitabpro.domain.sync.SyncHealthMonitor
 import com.ganesh.hisabkitabpro.ui.viewmodel.SettingsViewModel
 import com.ganesh.hisabkitabpro.ui.viewmodel.TransactionViewModel
 import com.ganesh.hisabkitabpro.ui.theme.*
@@ -62,6 +63,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
+    showBackNavigation: Boolean = true,
     onNavigateToBusinessProfile: () -> Unit,
     onNavigateToVisitingCard: () -> Unit,
     onNavigateToBillingSettings: () -> Unit = {},
@@ -145,12 +147,14 @@ fun SettingsScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.settings_back),
-                            tint = colorScheme.primary
-                        )
+                    if (showBackNavigation) {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.settings_back),
+                                tint = colorScheme.primary
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -575,6 +579,26 @@ fun SettingsCloudScreen(
                     icon = Icons.Default.CloudUpload,
                     onClick = { scope.launch { viewModel.syncData() } }
                 )
+                if (syncHealth.phase == SyncHealthMonitor.Phase.Syncing) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                            color = colorScheme.primary,
+                        )
+                        Text(
+                            text = stringResource(R.string.settings_sync_in_progress),
+                            color = colorScheme.onSurfaceVariant,
+                            fontSize = 12.sp,
+                        )
+                    }
+                }
                 val healthLine = buildString {
                     append(syncHealth.message)
                     if (syncHealth.totalOutstanding > 0) {

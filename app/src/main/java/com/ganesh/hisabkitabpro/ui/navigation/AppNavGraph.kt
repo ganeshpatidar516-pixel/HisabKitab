@@ -277,7 +277,8 @@ fun NavGraphBuilder.hisabAppNavGraph(
                 },
                 chatMessages = aiChatMessages,
                 onActionClick = { route -> navController.navigate(route) },
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                showBackNavigation = false,
             )
             }
         }
@@ -292,6 +293,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
         composable("settings") {
             SettingsScreen(
                 onNavigateBack = { navController.popBackStack() },
+                showBackNavigation = false,
                 onNavigateToBusinessProfile = { navController.navigate("business_profile") },
                 onNavigateToVisitingCard = { navController.navigate("visiting_card_studio") },
                 onNavigateToBillingSettings = { navController.navigate("settings_billing") },
@@ -995,10 +997,18 @@ fun NavGraphBuilder.hisabAppNavGraph(
         }
 
         composable(
-            route = "scan_bill/{customerId}",
-            arguments = listOf(navArgument("customerId") { type = NavType.LongType })
+            route = "scan_bill/{customerId}?prefillOnly={prefillOnly}",
+            arguments = listOf(
+                navArgument("customerId") { type = NavType.LongType },
+                navArgument("prefillOnly") {
+                    type = NavType.BoolType
+                    defaultValue = true
+                },
+            ),
         ) { entry ->
             val scanCustomerId = entry.arguments?.getLong("customerId") ?: 0L
+            val prefillOnly = entry.arguments?.getBoolean("prefillOnly") ?: true
+            val scanForPrefill = scanCustomerId == 0L || prefillOnly
             val context = LocalContext.current
             val processor = remember {
                 EntryPointAccessors.fromApplication(
@@ -1009,8 +1019,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
             OCRScannerScreen(
                 processor = processor,
                 customerId = scanCustomerId,
-                // P0: always prefill from this route; ledger save requires an explicit customer context.
-                scanForPrefill = true,
+                scanForPrefill = scanForPrefill,
                 liveLedgerAutoSaveEnabled = appSettings?.ocrLiveAutoSaveEnabled != false,
                 onPrefill = { amountText, noteLine, _, lowConf ->
                     transactionViewModel.setPendingScanPrefill(amountText, noteLine, lowConf)

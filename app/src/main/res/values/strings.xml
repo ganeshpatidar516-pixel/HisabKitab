@@ -42,6 +42,12 @@
     <string name="common_close">Close</string>
     <string name="common_save">Save</string>
     <string name="common_cancel">Cancel</string>
+    <string name="common_load_error">Could not load data. Check your connection and try again.</string>
+    <string name="common_retry">Retry</string>
+    <string name="common_save_failed">Could not save. Please try again.</string>
+    <string name="ledger_empty_transactions">No transactions yet</string>
+    <string name="customer_list_empty">No customers yet — tap + to add your first customer</string>
+    <string name="settings_sync_in_progress">Syncing to cloud…</string>
     <string name="supplier_more_tools">More Tools</string>
     <string name="supplier_communication">Communication</string>
     <string name="supplier_payment_credit">Payment &amp; Credit</string>
@@ -312,8 +318,8 @@
     <string name="supplier_share_outstanding_message">Outstanding %1$s — confirm here: %2$s</string>
     <string name="dashboard_title">HisabKitab Pro</string>
     <string name="dashboard_subtitle">Your business snapshot</string>
-    <string name="dashboard_action_add">Add</string>
-    <string name="dashboard_action_bill">Bill</string>
+    <string name="dashboard_action_add">Customers</string>
+    <string name="dashboard_action_bill">Bill (customer)</string>
     <string name="dashboard_action_scan">Scan</string>
     <string name="dashboard_action_voice">Voice</string>
     <!-- Legacy visiting_* form strings were purged with the 50-template procedural engine rebuild. -->

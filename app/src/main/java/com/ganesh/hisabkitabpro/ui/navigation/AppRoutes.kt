@@ -37,7 +37,7 @@ object AppRoutes {
     const val CustomerReminderHistory = "customer_reminder_history/{customerId}/{customerName}"
     const val AddTransaction = "add_transaction/{customerId}/{customerName}/{type}"
     const val FullBill = "full_bill/{customerId}/{customerName}/{type}"
-    const val ScanBill = "scan_bill/{customerId}"
+    const val ScanBill = "scan_bill/{customerId}?prefillOnly={prefillOnly}"
 
     const val SupplierLedger = "supplier_ledger/{supplierId}"
     const val SupplierStatement = "supplier_statement/{supplierId}"
@@ -51,6 +51,7 @@ object AppRoutes {
 
     fun customerLedger(customerId: Long) = "customer_ledger/$customerId"
     fun supplierLedger(supplierId: Long) = "supplier_ledger/$supplierId"
-    fun scanBill(customerId: Long = 0L) = "scan_bill/$customerId"
+    fun scanBill(customerId: Long = 0L, prefillOnly: Boolean = true) =
+        if (prefillOnly) "scan_bill/$customerId" else "scan_bill/$customerId?prefillOnly=false"
     fun scanSupplierBill(supplierId: Long) = "scan_supplier_bill/$supplierId"
 }

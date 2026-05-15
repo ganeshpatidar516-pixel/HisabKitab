@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import com.ganesh.hisabkitabpro.ui.common.PagingListStateOverlay
 import com.ganesh.hisabkitabpro.R
 import com.ganesh.hisabkitabpro.addon.reminder.ReminderAutomationPrefs
 import com.ganesh.hisabkitabpro.domain.customers.CustomerListMenuTab
@@ -191,6 +192,7 @@ fun CustomerListScreen(
                 }
             }
 
+            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 80.dp),
@@ -222,7 +224,6 @@ fun CustomerListScreen(
                     }
                 }
 
-                // Handle Loading/Error States
                 when (val state = pagedCustomers.loadState.append) {
                     is LoadState.Loading -> {
                         item {
@@ -234,18 +235,26 @@ fun CustomerListScreen(
                             }
                         }
                     }
+                    is LoadState.Error -> {
+                        item {
+                            TextButton(
+                                onClick = { pagedCustomers.retry() },
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Text(stringResource(R.string.common_retry))
+                            }
+                        }
+                    }
                     else -> {}
                 }
             }
 
-            if (pagedCustomers.itemCount == 0 && pagedCustomers.loadState.refresh is LoadState.NotLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        "NO CUSTOMERS FOUND",
-                        color = colorScheme.primary.copy(alpha = 0.5f),
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+            PagingListStateOverlay(
+                itemCount = pagedCustomers.itemCount,
+                refreshLoadState = pagedCustomers.loadState.refresh,
+                onRetry = { pagedCustomers.retry() },
+                emptyMessage = stringResource(R.string.customer_list_empty),
+            )
             }
         }
     }

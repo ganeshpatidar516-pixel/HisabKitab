@@ -93,7 +93,11 @@ fun DashboardScreen(
                         Icon(Icons.Default.Share, null, tint = colorScheme.onBackground)
                     }
                     IconButton(onClick = onHelpClick) {
-                        Icon(Icons.AutoMirrored.Filled.HelpOutline, null, tint = colorScheme.onBackground)
+                        Icon(
+                            Icons.AutoMirrored.Filled.HelpOutline,
+                            contentDescription = stringResource(R.string.settings_enterprise_help_center_title),
+                            tint = colorScheme.onBackground,
+                        )
                     }
                     // Theme-aware Authentication Gateway. Inherits colors from
                     // MaterialTheme.colorScheme so it adapts to every theme the

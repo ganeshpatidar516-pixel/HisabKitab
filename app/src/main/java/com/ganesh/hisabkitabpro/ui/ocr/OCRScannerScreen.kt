@@ -61,6 +61,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -252,6 +253,7 @@ fun OCRScannerScreen(
                 "liveLedgerAuto" to autoOcrFromLedger.toString(),
                 "customerScoped" to (customerId > 0L).toString(),
             ),
+            context,
         )
     }
 
@@ -371,21 +373,46 @@ fun OCRScannerScreen(
                 HorizontalDivider()
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.ocr_acquire_camera)) },
-                    leadingContent = { Icon(Icons.Default.Camera, contentDescription = null) },
-                    modifier = Modifier.clickable {
-                        OcrTelemetry.event("scanner_acquire", mapOf("source" to "camera"))
-                        showAcquisitionSheet = false
-                        chosenSource = BillAcquisitionSource.CAMERA
+                    leadingContent = {
+                        Icon(
+                            Icons.Default.Camera,
+                            contentDescription = stringResource(R.string.ocr_acquire_camera),
+                        )
                     },
+                    modifier = Modifier
+                        .testTag("ocr_acquire_camera")
+                        .clickable {
+                            OcrTelemetry.event(
+                                "scanner_acquire",
+                                mapOf("source" to "camera"),
+                                context,
+                            )
+                            showAcquisitionSheet = false
+                            chosenSource = BillAcquisitionSource.CAMERA
+                            if (!hasCameraPermission) {
+                                permissionLauncher.launch(Manifest.permission.CAMERA)
+                            }
+                        },
                 )
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.ocr_acquire_gallery)) },
-                    leadingContent = { Icon(Icons.Default.PhotoLibrary, contentDescription = null) },
-                    modifier = Modifier.clickable {
-                        OcrTelemetry.event("scanner_acquire", mapOf("source" to "gallery"))
-                        showAcquisitionSheet = false
-                        chosenSource = BillAcquisitionSource.GALLERY
+                    leadingContent = {
+                        Icon(
+                            Icons.Default.PhotoLibrary,
+                            contentDescription = stringResource(R.string.ocr_acquire_gallery),
+                        )
                     },
+                    modifier = Modifier
+                        .testTag("ocr_acquire_gallery")
+                        .clickable {
+                            OcrTelemetry.event(
+                                "scanner_acquire",
+                                mapOf("source" to "gallery"),
+                                context,
+                            )
+                            showAcquisitionSheet = false
+                            chosenSource = BillAcquisitionSource.GALLERY
+                        },
                 )
             }
         }
