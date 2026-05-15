@@ -140,6 +140,8 @@ kotlin {
 dependencies {
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
+    implementation(project(":core:common"))
+
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

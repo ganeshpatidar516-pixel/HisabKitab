@@ -24,3 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "HisabKitabPro"
 include(":app")
+include(":core:common")

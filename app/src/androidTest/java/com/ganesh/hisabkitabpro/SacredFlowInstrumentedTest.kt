@@ -46,6 +46,41 @@ class SacredFlowInstrumentedTest {
         assertEquals(creditPaise, refreshed!!.balanceCache)
     }
 
+    /**
+     * Mirrors [com.ganesh.hisabkitabpro.data.repository.TransactionRepositoryImpl.createBill]
+     * Room path: bill row + INVOICE txn + balanceCache recalc — no PDF/sync side effects.
+     */
+    @Test
+    fun test_CreateBillUpdatesCustomerBalance() = runBlocking {
+        val ctx = InstrumentationRegistry.getInstrumentation().targetContext
+        val db = AppDatabase.getDatabase(ctx)
+        val suffix = System.currentTimeMillis().toString().takeLast(8)
+        val customerId = db.customerDao().insertCustomer(
+            Customer(name = "Bill Balance Customer", phone = "96$suffix")
+        )
+        val billPaise = 12_500L
+        val billId = db.billDao().insertBill(
+            Bill(customerId = customerId, totalAmount = billPaise, status = "GENERATED")
+        )
+        db.transactionDao().insertTransactionWithBalanceUpdate(
+            Transaction(
+                customerId = customerId,
+                amount = billPaise,
+                type = TransactionType.INVOICE,
+                note = "Bill #$billId",
+                billId = billId,
+                invoiceNo = "BILL-$billId",
+                txnRef = UUID.randomUUID().toString(),
+                syncStatus = "PENDING",
+            )
+        )
+        val refreshed = db.customerDao().getCustomerById(customerId)
+        assertNotNull(refreshed)
+        assertEquals(billPaise, refreshed!!.balanceCache)
+        val txns = db.transactionDao().getTransactionsPaged(customerId, limit = 10, offset = 0)
+        assertTrue(txns.any { it.type == TransactionType.INVOICE && it.billId == billId })
+    }
+
     @Test
     fun test_GenerateBillAndCalculateGST() = runBlocking {
         val ctx = InstrumentationRegistry.getInstrumentation().targetContext

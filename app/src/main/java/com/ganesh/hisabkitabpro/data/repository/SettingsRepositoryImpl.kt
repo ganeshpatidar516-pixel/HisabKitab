@@ -1,7 +1,10 @@
 package com.ganesh.hisabkitabpro.data.repository
 
 import com.ganesh.hisabkitabpro.core.database.safeDatabaseCall
+import com.ganesh.hisabkitabpro.core.common.AppResult
 import com.ganesh.hisabkitabpro.core.network.safeApiCall
+import com.ganesh.hisabkitabpro.core.network.toAppResult
+import com.ganesh.hisabkitabpro.core.network.toKotlinResult
 import com.ganesh.hisabkitabpro.data.repository.local.SettingsDao
 import com.ganesh.hisabkitabpro.data.repository.local.BusinessProfileDao
 import com.ganesh.hisabkitabpro.domain.cloud.SelectiveCloudMirror
@@ -48,32 +51,36 @@ class SettingsRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun syncSettings(): Result<Unit> {
+    override suspend fun syncSettings(): Result<Unit> =
+        syncSettingsAppResult().toKotlinResult()
+
+    /** Tier-C: [AppResult] surface for settings cloud pull (non-sacred path). */
+    suspend fun syncSettingsAppResult(): AppResult<Unit> {
         return withContext(Dispatchers.IO) {
-            val result = safeApiCall("get_settings") {
-                settingsApi.getSettings()
-            }
-            
-            when (result) {
-                is com.ganesh.hisabkitabpro.core.network.NetworkResult.Success -> {
-                    val response = result.data
-                    if (response.isSuccessful) {
-                        response.body()?.let { remote ->
-                            safeDatabaseCall("SyncSettings_Save") {
-                                val local = settingsDao.getSettingsOnce()
-                                val merged = remote.copy(
-                                    ocrLiveAutoSaveEnabled = local?.ocrLiveAutoSaveEnabled
-                                        ?: remote.ocrLiveAutoSaveEnabled,
-                                )
-                                settingsDao.saveSettings(merged)
-                            }
-                        }
-                        Result.success(Unit)
-                    } else {
-                        Result.failure(Exception("Failed to fetch settings"))
+            when (val network = safeApiCall("get_settings") { settingsApi.getSettings() }.toAppResult()) {
+                is AppResult.Ok -> {
+                    val response = network.value
+                    if (!response.isSuccessful) {
+                        return@withContext AppResult.err(
+                            com.ganesh.hisabkitabpro.core.common.AppError.Http(
+                                response.code(),
+                                "Failed to fetch settings",
+                            ),
+                        )
                     }
+                    response.body()?.let { remote ->
+                        safeDatabaseCall("SyncSettings_Save") {
+                            val local = settingsDao.getSettingsOnce()
+                            val merged = remote.copy(
+                                ocrLiveAutoSaveEnabled = local?.ocrLiveAutoSaveEnabled
+                                    ?: remote.ocrLiveAutoSaveEnabled,
+                            )
+                            settingsDao.saveSettings(merged)
+                        }
+                    }
+                    AppResult.ok(Unit)
                 }
-                else -> Result.failure(Exception("Network error during settings sync"))
+                is AppResult.Err -> network
             }
         }
     }
