@@ -7,8 +7,23 @@ import com.ganesh.hisabkitabpro.domain.customers.CustomerListSortOption
 import com.ganesh.hisabkitabpro.domain.model.Customer
 import kotlinx.coroutines.flow.Flow
 
+/** Max customers loaded for AI / assistant snapshots (P1 scale cap). */
+const val CUSTOMER_AI_SNAPSHOT_LIMIT = 500
+
 interface CustomerRepository {
     fun getAllCustomers(): Flow<List<Customer>>
+
+    suspend fun getCustomersByIds(ids: List<Long>): List<Customer>
+
+    suspend fun getAllCustomerIds(): List<Long>
+
+    suspend fun getTopDebtorsLimited(limit: Int): List<Customer>
+
+    suspend fun getCustomerNamesLimited(limit: Int): List<String>
+
+    suspend fun getCustomerIdsByPhoneDigitSuffix(digitSuffix: String): List<Long>
+
+    suspend fun getDebtors(): List<Customer>
     fun getCustomerCount(): Flow<Int>
     fun getOverallNetBalancePaise(): Flow<Long>
     fun getDistinctCustomersRemindedCount(): Flow<Int>

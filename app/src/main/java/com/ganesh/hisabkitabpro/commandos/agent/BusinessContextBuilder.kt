@@ -1,5 +1,6 @@
 package com.ganesh.hisabkitabpro.commandos.agent
 
+import com.ganesh.hisabkitabpro.domain.repository.CUSTOMER_AI_SNAPSHOT_LIMIT
 import com.ganesh.hisabkitabpro.domain.repository.CustomerRepository
 import com.ganesh.hisabkitabpro.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.firstOrNull
@@ -20,32 +21,25 @@ class BusinessContextBuilder @Inject constructor(
         maxTopDebtors: Int = 5,
         maxNameSamples: Int = 30
     ): BusinessContextSnapshot {
-        val customers = customerRepository.getAllCustomers()
-            .firstOrNull()
-            .orEmpty()
-            .filter { !it.isDeleted }
-
         val overallNet = customerRepository.getOverallNetBalancePaise().firstOrNull() ?: 0L
+        val activeCount = customerRepository.getCustomerCount().firstOrNull() ?: 0
         val profile = settingsRepository.getBusinessProfile().firstOrNull()
         val businessName = profile?.businessName?.trim()?.takeIf { it.isNotBlank() }
 
-        val top = customers
-            .asSequence()
-            .filter { it.balanceCache > 0L }
-            .sortedByDescending { it.balanceCache }
-            .take(maxTopDebtors.coerceAtLeast(0))
+        val topDebtors = customerRepository.getTopDebtorsLimited(
+            maxTopDebtors.coerceIn(0, CUSTOMER_AI_SNAPSHOT_LIMIT),
+        )
+        val top = topDebtors
             .map { CustomerBalanceLine(name = it.name, balancePaise = it.balanceCache) }
-            .toList()
 
-        val names = customers
-            .map { it.name }
-            .sortedWith(compareBy { it.lowercase(Locale.ROOT) })
-            .take(maxNameSamples.coerceAtLeast(0))
+        val names = customerRepository.getCustomerNamesLimited(
+            maxNameSamples.coerceIn(0, CUSTOMER_AI_SNAPSHOT_LIMIT),
+        ).sortedWith(compareBy { it.lowercase(Locale.ROOT) })
 
         return BusinessContextSnapshot(
             builtAtEpochMillis = System.currentTimeMillis(),
             businessName = businessName,
-            activeCustomerCount = customers.size,
+            activeCustomerCount = activeCount,
             overallNetBalancePaise = overallNet,
             topPositiveBalances = top,
             sampleCustomerNames = names

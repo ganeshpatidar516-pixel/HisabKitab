@@ -9,6 +9,7 @@ import com.ganesh.hisabkitabpro.domain.inventory.InventoryCommandParser
 import com.ganesh.hisabkitabpro.domain.model.Customer
 import com.ganesh.hisabkitabpro.domain.model.Transaction
 import com.ganesh.hisabkitabpro.domain.model.TransactionType
+import com.ganesh.hisabkitabpro.domain.repository.CUSTOMER_AI_SNAPSHOT_LIMIT
 import com.ganesh.hisabkitabpro.domain.repository.CustomerRepository
 import com.ganesh.hisabkitabpro.domain.repository.SettingsRepository
 import com.ganesh.hisabkitabpro.domain.repository.TransactionRepository
@@ -35,24 +36,23 @@ class HisabKitabDomainAdapter @Inject constructor(
     override suspend fun suggestCustomerNames(query: String, limit: Int): List<String> {
         val q = query.trim()
         if (q.isEmpty() || limit <= 0) return emptyList()
-        return rankCustomers(q, loadActiveCustomers())
+        return rankCustomers(q, loadCustomersForMatching(q))
             .take(limit)
             .map { it.customer.name }
     }
 
     override suspend fun answerLedgerInsightQuery(normalizedInput: String, customerHint: String?): String? {
-        val all = loadActiveCustomers()
         val q = normalizedInput.lowercase().trim()
         val focus = customerHint?.trim()?.takeIf { it.isNotBlank() }
             ?: extractNameForBalanceQuery(normalizedInput)
 
         if (focus != null) {
-            if (all.isEmpty()) {
+            if ((customerRepository.getCustomerCount().firstOrNull() ?: 0) == 0) {
                 return "अभी ऐप में कोई ग्राहक नहीं है। पहले ग्राहक जोड़ें, फिर मैं बैलेंस बता सकता हूँ।"
             }
             val id = resolveCustomerId(focus)
             if (id != null) {
-                val c = all.first { it.id == id }
+                val c = customerRepository.getCustomerById(id) ?: return null
                 return formatCustomerBalanceLine(c)
             }
             val sug = suggestCustomerNames(focus, 5)
@@ -65,28 +65,20 @@ class HisabKitabDomainAdapter @Inject constructor(
 
         if (!looksLikeLedgerQuestion(q)) return null
 
-        if (all.isEmpty()) {
+        val count = customerRepository.getCustomerCount().firstOrNull() ?: 0
+        if (count == 0) {
             return "अभी ऐप में कोई ग्राहक डेटा नहीं है। पहले ग्राहक जोड़ें, फिर कुल उधार/सारांश पूछ सकते हैं।"
         }
 
-        val count = all.size
-        val netPaise = all.sumOf { it.balanceCache }
-        val receivablePaise = all.filter { it.balanceCache > 0L }.sumOf { it.balanceCache }
-        val negativePaise = all.filter { it.balanceCache < 0L }.sumOf { -it.balanceCache }
-        val debtors = all.filter { it.balanceCache > 0L }.sortedByDescending { it.balanceCache }
+        val netPaise = customerRepository.getOverallNetBalancePaise().firstOrNull() ?: 0L
+        val debtors = customerRepository.getTopDebtorsLimited(3)
 
         val lines = mutableListOf<String>()
         lines.add("📒 आपके डेटा से (लोकल ग्राहक सूची): कुल $count ग्राहक।")
         lines.add("कुल नेट बैलेंस (सभी balanceCache का योग): ₹${rupees(netPaise)}।")
-        if (receivablePaise > 0L) {
-            lines.add("वसूलनी वाला उधार (balance > 0): ₹${rupees(receivablePaise)}।")
-        }
-        if (negativePaise > 0L) {
-            lines.add("नकारात्मक बैलेंस कुल (जमा/देना): ₹${rupees(negativePaise)}।")
-        }
         if (debtors.isNotEmpty()) {
-            val top = debtors.take(3).joinToString { "${it.name}: ₹${rupees(it.balanceCache)}" }
-            lines.add("सबसे ज़्यादा बकाया (शीर्ष 3): $top।")
+            val top = debtors.joinToString { "${it.name}: ₹${rupees(it.balanceCache)}" }
+            lines.add("सबसे ज़्यादा बकाया (शीर्ष ${debtors.size}): $top।")
         }
         lines.add("डिटेल के लिए ग्राहक की लेजर स्क्रीन खोलें — यह सारांश तेज़ कैश से आता है।")
         return lines.joinToString("\n")
@@ -191,8 +183,25 @@ class HisabKitabDomainAdapter @Inject constructor(
         }
     }
 
-    private suspend fun loadActiveCustomers(): List<Customer> {
-        return customerRepository.getAllCustomers().firstOrNull().orEmpty().filter { !it.isDeleted }
+    private suspend fun loadCustomersForMatching(query: String): List<Customer> {
+        val cleaned = query.trim()
+        if (cleaned.isEmpty()) return emptyList()
+        val seen = linkedSetOf<Long>()
+        val out = mutableListOf<Customer>()
+        val tokens = cleaned.split(Regex("\\s+")).filter { it.length >= 2 }.take(4)
+        val queries = (tokens + cleaned).distinct()
+        for (q in queries) {
+            customerRepository.searchCustomers(q).forEach { c ->
+                if (!c.isDeleted && seen.add(c.id)) {
+                    out.add(c)
+                    if (out.size >= CUSTOMER_AI_SNAPSHOT_LIMIT) return out
+                }
+            }
+        }
+        if (out.isEmpty()) {
+            out.addAll(customerRepository.getTopDebtorsLimited(50))
+        }
+        return out.take(CUSTOMER_AI_SNAPSHOT_LIMIT)
     }
 
     private suspend fun inventorySummary(): String {
@@ -299,7 +308,7 @@ class HisabKitabDomainAdapter @Inject constructor(
     private suspend fun resolveCustomerId(inputName: String): Long? {
         val query = inputName.trim()
         if (query.isEmpty()) return null
-        val ranked = rankCustomers(query, loadActiveCustomers())
+        val ranked = rankCustomers(query, loadCustomersForMatching(query))
         val best = ranked.firstOrNull() ?: return null
         if (best.rank > 6) return null
         return best.customer.id

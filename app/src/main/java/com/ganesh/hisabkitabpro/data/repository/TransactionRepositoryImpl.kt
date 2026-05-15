@@ -325,7 +325,9 @@ class TransactionRepositoryImpl @Inject constructor(
                     pair
                 }
             }
-            generatePdfForTransaction(result.second)
+            withContext(Dispatchers.IO) {
+                generatePdfForTransaction(result.second)
+            }
             Result.success(CreateBillResult(billId = result.first, transactionId = result.second))
         } catch (e: Exception) {
             Result.failure(e)
@@ -390,17 +392,19 @@ class TransactionRepositoryImpl @Inject constructor(
                     pair
                 }
             }
-            val pdfOk = generateProfessionalItemizedPdf(
-                transactionId = result.second,
-                customerId = customerId,
-                items = items,
-                businessProfile = businessProfile,
-                templateId = pdfTemplateId,
-                settingsGstEnabled = settingsGstEnabled,
-                settingsGstRatePercent = settingsGstRatePercent
-            )
-            if (!pdfOk) {
-                generatePdfForTransaction(result.second)
+            withContext(Dispatchers.IO) {
+                val pdfOk = generateProfessionalItemizedPdf(
+                    transactionId = result.second,
+                    customerId = customerId,
+                    items = items,
+                    businessProfile = businessProfile,
+                    templateId = pdfTemplateId,
+                    settingsGstEnabled = settingsGstEnabled,
+                    settingsGstRatePercent = settingsGstRatePercent,
+                )
+                if (!pdfOk) {
+                    generatePdfForTransaction(result.second)
+                }
             }
             Result.success(CreateBillResult(billId = result.first, transactionId = result.second))
         } catch (e: Exception) {

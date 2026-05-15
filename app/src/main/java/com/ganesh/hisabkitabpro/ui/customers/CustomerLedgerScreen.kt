@@ -75,6 +75,7 @@ import com.ganesh.hisabkitabpro.network.api.SharedKhataLinePayload
 import com.ganesh.hisabkitabpro.network.api.SharedKhataPublishRequestDto
 import com.ganesh.hisabkitabpro.ui.payment.FintechUpiPaymentCard
 import com.ganesh.hisabkitabpro.core.security.PrivacySecureEffect
+import com.ganesh.hisabkitabpro.ui.viewmodel.CustomerViewModel
 import com.ganesh.hisabkitabpro.ui.viewmodel.TransactionViewModel
 import com.ganesh.hisabkitabpro.util.safeClickable
 import com.ganesh.hisabkitabpro.util.WhatsAppBillSender
@@ -106,6 +107,7 @@ fun CustomerLedgerScreen(
     val haptic = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
     val ledgerViewModel: CustomerLedgerViewModel = hiltViewModel()
+    val customerViewModel: CustomerViewModel = hiltViewModel()
     val prefs = remember(context.applicationContext) {
         context.applicationContext.getSharedPreferences("hisabkitab_prefs", Context.MODE_PRIVATE)
     }
@@ -115,15 +117,9 @@ fun CustomerLedgerScreen(
     val pagedTransactions = remember(customer.id) { 
         transactionViewModel.getTransactionsByCustomerPaged(customer.id) 
     }.collectAsLazyPagingItems()
-    val allTransactions by transactionViewModel.allTransactions.collectAsState(initial = emptyList())
-    val customerTransactions = remember(allTransactions, customer.id) {
-        allTransactions.filter { it.customerId == customer.id && !it.isDeleted }
-    }
-    val netBalancePaise = remember(customerTransactions) {
-        customerTransactions.sumOf { tx ->
-            if (tx.type == TransactionType.CREDIT || tx.type == TransactionType.INVOICE) tx.amount else -tx.amount
-        }
-    }
+    val liveCustomer by customerViewModel.getCustomerByIdFlow(customer.id)
+        .collectAsStateWithLifecycle(initialValue = customer)
+    val netBalancePaise = liveCustomer?.balanceCache ?: customer.balanceCache
     val businessProfile by ledgerViewModel.businessProfile.collectAsStateWithLifecycle()
     var nextAutoReminderAt by remember(customer.id) {
         mutableStateOf(
@@ -174,9 +170,9 @@ fun CustomerLedgerScreen(
         Toast.makeText(context, context.getString(R.string.customer_share_online_khata_publishing), Toast.LENGTH_SHORT).show()
         scope.launch(Dispatchers.IO) {
             try {
-                val lines = customerTransactions
+                val snapshot = transactionViewModel.getCustomerTransactionsSnapshot(customer.id)
+                val lines = snapshot
                     .sortedByDescending { it.createdAt }
-                    .take(500)
                     .map { tx ->
                         SharedKhataLinePayload(
                             amountPaise = tx.amount,
@@ -275,7 +271,8 @@ fun CustomerLedgerScreen(
                 ).show()
             }
 
-            val oldestTxnAt = customerTransactions.minOfOrNull { it.createdAt } ?: System.currentTimeMillis()
+            val oldestTxnAt = liveCustomer?.lastTransactionDate
+                ?: System.currentTimeMillis()
             val daysOverdue = ((System.currentTimeMillis() - oldestTxnAt) / (24L * 60L * 60L * 1000L)).toInt()
                 .coerceAtLeast(0)
             val previousAttempts = ReminderAutomationPrefs.getReminderAttempts(context, customer.id)

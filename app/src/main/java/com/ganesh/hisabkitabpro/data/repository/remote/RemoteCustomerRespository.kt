@@ -42,6 +42,27 @@ class RemoteCustomerRepository @Inject constructor() : CustomerRepository {
         emit(fetchCustomers())
     }
 
+    override suspend fun getCustomersByIds(ids: List<Long>): List<Customer> =
+        fetchCustomers().filter { it.id in ids.toSet() }
+
+    override suspend fun getAllCustomerIds(): List<Long> = fetchCustomers().map { it.id }
+
+    override suspend fun getTopDebtorsLimited(limit: Int): List<Customer> =
+        fetchCustomers().filter { it.balanceCache > 0L }
+            .sortedByDescending { it.balanceCache }
+            .take(limit)
+
+    override suspend fun getCustomerNamesLimited(limit: Int): List<String> =
+        fetchCustomers().map { it.name }.sorted().take(limit)
+
+    override suspend fun getCustomerIdsByPhoneDigitSuffix(digitSuffix: String): List<Long> =
+        fetchCustomers().filter { c ->
+            c.phone.filter { it.isDigit() }.endsWith(digitSuffix)
+        }.map { it.id }
+
+    override suspend fun getDebtors(): List<Customer> =
+        fetchCustomers().filter { it.balanceCache > 0L }
+
     override fun getCustomerCount(): Flow<Int> = getAllCustomers().map { it.size }
 
     override fun getOverallNetBalancePaise(): Flow<Long> =

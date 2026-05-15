@@ -178,6 +178,12 @@ class TransactionViewModel @Inject constructor(
         return repository.getTransactionsByCustomerPaged(customerId).cachedIn(viewModelScope)
     }
 
+    /** P1: bounded export for shared khata / reminders (not global recent-50). */
+    suspend fun getCustomerTransactionsSnapshot(customerId: Long, limit: Int = 500): List<Transaction> =
+        withContext(Dispatchers.IO) {
+            repository.getCustomerFull(customerId, limit, 0).getOrNull()?.transactions.orEmpty()
+        }
+
     fun getTransactionById(id: Long): Flow<Transaction?> {
         return repository.getTransactionById(id).flowOn(Dispatchers.IO)
     }

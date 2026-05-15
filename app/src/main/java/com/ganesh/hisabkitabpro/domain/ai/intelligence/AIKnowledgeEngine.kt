@@ -25,8 +25,17 @@ class AIKnowledgeEngine(
         
         // Example: Check for balance of a specific customer
         if (lowerQuery.contains("balance") || lowerQuery.contains("hisab")) {
-            val customers = customerRepository.getAllCustomers().firstOrNull() ?: emptyList()
+            val nameHint = lowerQuery
+                .replace("balance", "")
+                .replace("hisab", "")
+                .trim()
+            val customers = if (nameHint.length >= 2) {
+                customerRepository.searchCustomers(nameHint)
+            } else {
+                emptyList()
+            }
             val target = customers.find { lowerQuery.contains(it.name.lowercase()) }
+                ?: customers.maxByOrNull { it.name.length }
             
             if (target != null) {
                 return AIResponse(

@@ -3,6 +3,7 @@ package com.ganesh.hisabkitabpro.domain.ai
 import android.content.Context
 import android.util.Log
 import com.ganesh.hisabkitabpro.domain.model.TransactionType
+import com.ganesh.hisabkitabpro.domain.repository.CUSTOMER_AI_SNAPSHOT_LIMIT
 import com.ganesh.hisabkitabpro.domain.repository.CustomerRepository
 import com.ganesh.hisabkitabpro.domain.repository.SettingsRepository
 import com.ganesh.hisabkitabpro.network.RetrofitClient
@@ -48,8 +49,7 @@ class AICommandRouter(
 
         // 2. Ledger Follow-up Logic
         if (pendingAmount != null && !isTransactionCommand(lower)) {
-            val customers = customerRepository.getAllCustomers().firstOrNull() ?: emptyList()
-            val matchedCustomer = findBestMatch(command, customers)
+            val matchedCustomer = findBestMatch(command, customersForMatching(command))
             if (matchedCustomer != null) {
                 return executePendingTransaction(matchedCustomer)
             }
@@ -118,8 +118,7 @@ class AICommandRouter(
         val type = if (command.contains("जमा") || command.contains("paid") || command.contains("received") || command.contains("mil gaye")) 
                       TransactionType.DEBIT else TransactionType.CREDIT
         
-        val customers = customerRepository.getAllCustomers().firstOrNull() ?: emptyList()
-        val customer = findBestMatch(command, customers)
+        val customer = findBestMatch(command, customersForMatching(command))
 
         return if (customer != null && amountPaise > 0) {
             clearPending()
@@ -159,6 +158,27 @@ class AICommandRouter(
             type = ResponseType.TRANSACTION_CARD,
             actions = listOf(AIAction("खाता देखें", "customer_ledger/${customer.id}"))
         )
+    }
+
+    private suspend fun customersForMatching(text: String): List<com.ganesh.hisabkitabpro.domain.model.Customer> {
+        val cleaned = text.trim()
+        if (cleaned.isEmpty()) return emptyList()
+        val seen = linkedSetOf<Long>()
+        val out = mutableListOf<com.ganesh.hisabkitabpro.domain.model.Customer>()
+        val tokens = cleaned.split(Regex("\\s+")).filter { it.length >= 2 }.take(4)
+        val queries = (tokens + cleaned).distinct()
+        for (q in queries) {
+            customerRepository.searchCustomers(q).forEach { c ->
+                if (seen.add(c.id)) {
+                    out.add(c)
+                    if (out.size >= CUSTOMER_AI_SNAPSHOT_LIMIT) return out
+                }
+            }
+        }
+        if (out.isEmpty()) {
+            out.addAll(customerRepository.getTopDebtorsLimited(50))
+        }
+        return out.take(CUSTOMER_AI_SNAPSHOT_LIMIT)
     }
 
     private fun findBestMatch(input: String, customers: List<com.ganesh.hisabkitabpro.domain.model.Customer>): com.ganesh.hisabkitabpro.domain.model.Customer? {

@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -60,13 +61,16 @@ fun CustomerListScreen(
     onAddCustomerClick: () -> Unit
 ) {
     val pagedCustomers = viewModel.pagedCustomers.collectAsLazyPagingItems()
-    val customerListOverview by viewModel.customerListOverview.collectAsState()
-    val allCustomers by viewModel.allCustomers.collectAsState()
-    val remindedCustomerIds by viewModel.remindedCustomerIds.collectAsState()
-    val dueReminderCustomerIds by viewModel.dueReminderCustomerIds.collectAsState()
-    val appliedMenuTab by viewModel.menuTab.collectAsState()
-    val appliedSortOption by viewModel.sortOption.collectAsState()
-    val appliedReminderSegments by viewModel.reminderSegments.collectAsState()
+    val customerListOverview by viewModel.customerListOverview.collectAsStateWithLifecycle()
+    val remindedCustomers by viewModel.remindedCustomersOverview.collectAsStateWithLifecycle()
+    val notRemindedCustomers by viewModel.notRemindedCustomersOverview.collectAsStateWithLifecycle()
+    val dueNowCustomers by viewModel.dueNowCustomersOverview.collectAsStateWithLifecycle()
+    val autoOffCustomerCount by viewModel.autoOffCustomerCount.collectAsStateWithLifecycle()
+    val remindedCustomerIds by viewModel.remindedCustomerIds.collectAsStateWithLifecycle()
+    val dueReminderCustomerIds by viewModel.dueReminderCustomerIds.collectAsStateWithLifecycle()
+    val appliedMenuTab by viewModel.menuTab.collectAsStateWithLifecycle()
+    val appliedSortOption by viewModel.sortOption.collectAsStateWithLifecycle()
+    val appliedReminderSegments by viewModel.reminderSegments.collectAsStateWithLifecycle()
     var searchQuery by remember { mutableStateOf("") }
     var showSortSheet by remember { mutableStateOf(false) }
     var reminderSheetMode by remember { mutableStateOf<ReminderSheetMode?>(null) }
@@ -82,53 +86,9 @@ fun CustomerListScreen(
     }
     val focusManager = LocalFocusManager.current
     val colorScheme = MaterialTheme.colorScheme
-    val autoPilotEnabled = ReminderAutomationPrefs.isAutoPilotEnabled(context)
-    val remindedCustomers = remember(allCustomers, remindedCustomerIds, autoPilotEnabled) {
-        allCustomers
-            .filter { remindedCustomerIds.contains(it.id) }
-            .map {
-                CustomerViewModel.ReminderOverviewCustomer(
-                    id = it.id,
-                    name = it.name,
-                    phone = it.phone,
-                    balanceCache = it.balanceCache,
-                    autoReminderEnabled = autoPilotEnabled &&
-                        ReminderAutomationPrefs.isCustomerReminderEnabled(context, it.id)
-                )
-            }
-    }
-    val notRemindedCustomers = remember(allCustomers, remindedCustomerIds, autoPilotEnabled) {
-        allCustomers
-            .filterNot { remindedCustomerIds.contains(it.id) }
-            .map {
-                CustomerViewModel.ReminderOverviewCustomer(
-                    id = it.id,
-                    name = it.name,
-                    phone = it.phone,
-                    balanceCache = it.balanceCache,
-                    autoReminderEnabled = autoPilotEnabled &&
-                        ReminderAutomationPrefs.isCustomerReminderEnabled(context, it.id)
-                )
-            }
-    }
-    val dueNowCustomers = remember(allCustomers, dueReminderCustomerIds, autoPilotEnabled) {
-        allCustomers
-            .filter { dueReminderCustomerIds.contains(it.id) }
-            .map {
-                CustomerViewModel.ReminderOverviewCustomer(
-                    id = it.id,
-                    name = it.name,
-                    phone = it.phone,
-                    balanceCache = it.balanceCache,
-                    autoReminderEnabled = autoPilotEnabled &&
-                        ReminderAutomationPrefs.isCustomerReminderEnabled(context, it.id)
-                )
-            }
-    }
-    val sentTodayCount = remember(remindedCustomerIds) { remindedCustomerIds.size }
-    val autoOffCustomerCount = remember(allCustomers, autoPilotEnabled) {
-        if (!autoPilotEnabled) allCustomers.size
-        else allCustomers.count { !ReminderAutomationPrefs.isCustomerReminderEnabled(context, it.id) }
+    val sentTodayCount = remindedCustomerIds.size
+    val autoPilotEnabled = remember(context) {
+        ReminderAutomationPrefs.isAutoPilotEnabled(context)
     }
 
     Scaffold(

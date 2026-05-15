@@ -4,7 +4,6 @@ import com.ganesh.hisabkitabpro.data.local.AppDatabase
 import com.ganesh.hisabkitabpro.domain.model.Bill
 import com.ganesh.hisabkitabpro.domain.model.Customer
 import java.util.regex.Pattern
-import kotlinx.coroutines.flow.first
 
 /**
  * Parses bank/UPI SMS text and finds a best-effort pending [Bill] match.
@@ -64,12 +63,8 @@ object TransactionMatcher {
         if (exact != null) return exact
 
         val suffix = parsed.accountLastFour ?: return null
-        val customers: List<Customer> = db.customerDao().getAllCustomers().first()
-        val candidateIds = customers
-            .filter { c ->
-                !c.isDeleted && c.phone.filter { ch -> ch.isDigit() }.endsWith(suffix)
-            }
-            .map { it.id }
+        val candidateIds = db.customerDao()
+            .getCustomerIdsByPhoneDigitSuffix(suffix)
             .toSet()
         if (candidateIds.isEmpty()) return null
 

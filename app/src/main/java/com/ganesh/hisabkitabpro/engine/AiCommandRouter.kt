@@ -4,7 +4,6 @@ import com.ganesh.hisabkitabpro.domain.model.Transaction
 import com.ganesh.hisabkitabpro.domain.model.TransactionType
 import com.ganesh.hisabkitabpro.domain.repository.CustomerRepository
 import com.ganesh.hisabkitabpro.domain.repository.TransactionRepository
-import kotlinx.coroutines.flow.firstOrNull
 import java.util.*
 
 sealed class AiActionResult {
@@ -64,10 +63,11 @@ class AiCommandRouter(
             val words = command.split(" ")
             val name = words.lastOrNull() ?: "Unknown"
 
-            val customers = customerRepository.getAllCustomers().firstOrNull()
-            val customer = customers?.find { 
-                it.name.equals(name, ignoreCase = true) 
-            } ?: return AiActionResult.Error("Customer '$name' not found.")
+            val customers = customerRepository.searchCustomers(name)
+            val customer = customers.find {
+                it.name.equals(name, ignoreCase = true)
+            } ?: customers.firstOrNull()
+                ?: return AiActionResult.Error("Customer '$name' not found.")
 
             val transaction = Transaction(
                 amount = amountPaise,

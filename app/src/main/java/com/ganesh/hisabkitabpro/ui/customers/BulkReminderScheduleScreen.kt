@@ -36,7 +36,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -129,10 +129,7 @@ fun BulkReminderScheduleScreen(
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
-    val customersRaw by viewModel.allCustomers.collectAsState()
-    val customers = remember(customersRaw) {
-        customersRaw.sortedWith(compareByDescending<Customer> { it.balanceCache }.thenBy { it.name.lowercase(Locale.getDefault()) })
-    }
+    val customers by viewModel.bulkReminderDebtors.collectAsStateWithLifecycle()
     var selectedIds by remember { mutableStateOf(setOf<Long>()) }
     var slotIndex by remember { mutableIntStateOf(0) }
     var menuExpanded by remember { mutableStateOf(false) }

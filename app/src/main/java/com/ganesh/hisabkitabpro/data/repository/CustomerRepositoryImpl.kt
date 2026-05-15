@@ -10,7 +10,9 @@ import com.ganesh.hisabkitabpro.domain.customers.CustomerListReminderSegment
 import com.ganesh.hisabkitabpro.domain.customers.CustomerListSortOption
 import com.ganesh.hisabkitabpro.domain.cloud.SelectiveCloudMirror
 import com.ganesh.hisabkitabpro.domain.model.Customer
+import com.ganesh.hisabkitabpro.domain.repository.CUSTOMER_AI_SNAPSHOT_LIMIT
 import com.ganesh.hisabkitabpro.domain.repository.CustomerRepository
+import kotlinx.coroutines.withContext
 import com.ganesh.hisabkitabpro.domain.sync.SyncEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -30,6 +32,34 @@ class CustomerRepositoryImpl @Inject constructor(
 
     override fun getAllCustomers(): Flow<List<Customer>> =
         customerDao.getAllCustomers().flowOn(Dispatchers.IO)
+
+    override suspend fun getCustomersByIds(ids: List<Long>): List<Customer> =
+        withContext(Dispatchers.IO) {
+            if (ids.isEmpty()) emptyList()
+            else customerDao.getCustomersByIds(ids.distinct())
+        }
+
+    override suspend fun getAllCustomerIds(): List<Long> =
+        withContext(Dispatchers.IO) { customerDao.getAllCustomerIds() }
+
+    override suspend fun getTopDebtorsLimited(limit: Int): List<Customer> =
+        withContext(Dispatchers.IO) {
+            customerDao.getTopDebtorsLimited(limit.coerceIn(1, CUSTOMER_AI_SNAPSHOT_LIMIT))
+        }
+
+    override suspend fun getCustomerNamesLimited(limit: Int): List<String> =
+        withContext(Dispatchers.IO) {
+            customerDao.getCustomerNamesLimited(limit.coerceIn(1, CUSTOMER_AI_SNAPSHOT_LIMIT))
+        }
+
+    override suspend fun getCustomerIdsByPhoneDigitSuffix(digitSuffix: String): List<Long> =
+        withContext(Dispatchers.IO) {
+            if (digitSuffix.isBlank()) emptyList()
+            else customerDao.getCustomerIdsByPhoneDigitSuffix(digitSuffix)
+        }
+
+    override suspend fun getDebtors(): List<Customer> =
+        withContext(Dispatchers.IO) { customerDao.getDebtors() }
 
     override fun getCustomerCount(): Flow<Int> =
         customerDao.getCustomerCount().flowOn(Dispatchers.IO)

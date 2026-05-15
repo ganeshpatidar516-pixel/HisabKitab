@@ -91,6 +91,30 @@ interface CustomerDao {
     @Query("SELECT * FROM customers WHERE balanceCache > 0 AND isDeleted = 0")
     suspend fun getDebtors(): List<Customer>
 
+    @Query("SELECT * FROM customers WHERE isDeleted = 0 AND id IN (:ids)")
+    suspend fun getCustomersByIds(ids: List<Long>): List<Customer>
+
+    @Query("SELECT id FROM customers WHERE isDeleted = 0")
+    suspend fun getAllCustomerIds(): List<Long>
+
+    @Query(
+        "SELECT * FROM customers WHERE isDeleted = 0 AND balanceCache > 0 " +
+            "ORDER BY balanceCache DESC LIMIT :limit"
+    )
+    suspend fun getTopDebtorsLimited(limit: Int): List<Customer>
+
+    @Query(
+        "SELECT name FROM customers WHERE isDeleted = 0 " +
+            "ORDER BY name COLLATE NOCASE ASC LIMIT :limit"
+    )
+    suspend fun getCustomerNamesLimited(limit: Int): List<String>
+
+    @Query(
+        "SELECT id FROM customers WHERE isDeleted = 0 AND " +
+            "REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '+', '') LIKE '%' || :digitSuffix"
+    )
+    suspend fun getCustomerIdsByPhoneDigitSuffix(digitSuffix: String): List<Long>
+
     @Query("UPDATE customers SET balanceCache = balanceCache + :delta, updatedAt = :timestamp WHERE id = :customerId")
     suspend fun updateBalanceCache(customerId: Long, delta: Long, timestamp: Long = System.currentTimeMillis())
 }

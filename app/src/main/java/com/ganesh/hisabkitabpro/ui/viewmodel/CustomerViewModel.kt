@@ -9,6 +9,7 @@ import com.ganesh.hisabkitabpro.domain.customers.CustomerListMenuTab
 import com.ganesh.hisabkitabpro.domain.customers.CustomerListReminderSegment
 import com.ganesh.hisabkitabpro.domain.customers.CustomerListSortOption
 import com.ganesh.hisabkitabpro.domain.model.Customer
+import com.ganesh.hisabkitabpro.domain.repository.CUSTOMER_AI_SNAPSHOT_LIMIT
 import com.ganesh.hisabkitabpro.domain.repository.CustomerRepository
 import com.ganesh.hisabkitabpro.ui.customers.CustomerListFilterPrefs
 import com.ganesh.hisabkitabpro.ui.customers.CustomerListFilterSettings
@@ -21,11 +22,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import com.ganesh.hisabkitabpro.addon.reminder.ReminderAutomationPrefs
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 /**
@@ -94,6 +99,7 @@ class CustomerViewModel @Inject constructor(
 
     val customers: StateFlow<List<Customer>> = recentCustomers
 
+    /** @deprecated Prefer capped queries; loads entire table. */
     val allCustomers: StateFlow<List<Customer>> = repository.getAllCustomers()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -120,6 +126,90 @@ class CustomerViewModel @Inject constructor(
             remindersDueNow = dueNow.coerceAtLeast(0)
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CustomerListOverview())
+
+    private fun toReminderOverview(customers: List<Customer>): List<ReminderOverviewCustomer> {
+        val autoPilot = ReminderAutomationPrefs.isAutoPilotEnabled(appContext)
+        return customers.map { c ->
+            ReminderOverviewCustomer(
+                id = c.id,
+                name = c.name,
+                phone = c.phone,
+                balanceCache = c.balanceCache,
+                autoReminderEnabled = autoPilot &&
+                    ReminderAutomationPrefs.isCustomerReminderEnabled(appContext, c.id),
+            )
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val remindedCustomersOverview: StateFlow<List<ReminderOverviewCustomer>> =
+        remindedCustomerIds.flatMapLatest { ids ->
+            flow {
+                val customers = withContext(Dispatchers.IO) {
+                    repository.getCustomersByIds(ids.toList())
+                }
+                emit(toReminderOverview(customers))
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val notRemindedCustomersOverview: StateFlow<List<ReminderOverviewCustomer>> =
+        remindedCustomerIds.flatMapLatest { reminded ->
+            flow {
+                val customers = withContext(Dispatchers.IO) {
+                    val allIds = repository.getAllCustomerIds()
+                    val notRemindedIds = allIds.filterNot { reminded.contains(it) }
+                    repository.getCustomersByIds(notRemindedIds)
+                }
+                emit(toReminderOverview(customers))
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val dueNowCustomersOverview: StateFlow<List<ReminderOverviewCustomer>> =
+        dueReminderCustomerIds.flatMapLatest { ids ->
+            flow {
+                val customers = withContext(Dispatchers.IO) {
+                    repository.getCustomersByIds(ids.toList())
+                }
+                emit(toReminderOverview(customers))
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val bulkReminderDebtors: StateFlow<List<Customer>> = flow {
+        emit(
+            withContext(Dispatchers.IO) {
+                repository.getDebtors().sortedWith(
+                    compareByDescending<Customer> { it.balanceCache }
+                        .thenBy { it.name.lowercase() },
+                )
+            },
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val assistantCustomerNames: StateFlow<List<String>> = flow {
+        emit(
+            withContext(Dispatchers.IO) {
+                repository.getCustomerNamesLimited(CUSTOMER_AI_SNAPSHOT_LIMIT)
+            },
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val autoOffCustomerCount: StateFlow<Int> = combine(
+        remindedCustomerIds,
+        flow {
+            emit(withContext(Dispatchers.IO) { repository.getAllCustomerIds() })
+        },
+    ) { reminded, allIds ->
+        val autoPilot = ReminderAutomationPrefs.isAutoPilotEnabled(appContext)
+        if (!autoPilot) {
+            allIds.size
+        } else {
+            allIds.count { id ->
+                !ReminderAutomationPrefs.isCustomerReminderEnabled(appContext, id)
+            }
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     fun markCustomerReminderSent(customerId: Long) {
         viewModelScope.launch(Dispatchers.IO) {

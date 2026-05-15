@@ -116,16 +116,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
         composable("ai_assistant") {
             val scope = rememberCoroutineScope()
             val txState by transactionViewModel.allTransactions.collectAsStateWithLifecycle()
-            val allCustomersForAssistant by customerViewModel.allCustomers.collectAsStateWithLifecycle(
-                initialValue = emptyList()
-            )
-            val assistantCustomerNames = remember(allCustomersForAssistant) {
-                allCustomersForAssistant
-                    .map { it.name.trim() }
-                    .filter { it.isNotEmpty() }
-                    .distinct()
-                    .sorted()
-            }
+            val assistantCustomerNames by customerViewModel.assistantCustomerNames.collectAsStateWithLifecycle()
 
             suspend fun runLegacyAssistant(commandText: String, riskBadge: String) {
                 val command = AIKhataAssistant.interpretCommand(commandText)
