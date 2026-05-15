@@ -16,3 +16,10 @@ local.properties
 keystore.properties
 *.jks
 *.keystore
+
+# Python backend (HisabKitab/MainApp) — never commit secrets or venvs
+HisabKitab/**/.env
+HisabKitab/**/aiapi/
+HisabKitab/**/__pycache__/
+HisabKitab/**/*.pyc
+HisabKitab/**/.git/
