@@ -50,6 +50,7 @@ data class PendingOcrScanPrefill(
     val amountKeypadText: String,
     val note: String,
     val lowConfidenceAmount: Boolean = false,
+    val billImageUri: String? = null,
 )
 
 @HiltViewModel
@@ -79,8 +80,18 @@ class TransactionViewModel @Inject constructor(
     private val _pendingScanPrefill = MutableStateFlow<PendingOcrScanPrefill?>(null)
     val pendingScanPrefill: StateFlow<PendingOcrScanPrefill?> = _pendingScanPrefill.asStateFlow()
 
-    fun setPendingScanPrefill(amountKeypadText: String, note: String, lowConfidenceAmount: Boolean = false) {
-        _pendingScanPrefill.value = PendingOcrScanPrefill(amountKeypadText, note, lowConfidenceAmount)
+    fun setPendingScanPrefill(
+        amountKeypadText: String,
+        note: String,
+        lowConfidenceAmount: Boolean = false,
+        billImageUri: String? = null,
+    ) {
+        _pendingScanPrefill.value = PendingOcrScanPrefill(
+            amountKeypadText,
+            note,
+            lowConfidenceAmount,
+            billImageUri,
+        )
     }
 
     fun consumePendingScanPrefill() {
@@ -196,7 +207,7 @@ class TransactionViewModel @Inject constructor(
         amountPaise: Long,
         type: TransactionType,
         note: String? = null,
-        onComplete: () -> Unit = {},
+        onComplete: (transactionId: Long) -> Unit = {},
         onError: () -> Unit = {},
     ) {
         if (!addTransactionInFlight.compareAndSet(false, true)) {
@@ -214,7 +225,11 @@ class TransactionViewModel @Inject constructor(
                 )
                 val result = repository.addTransaction(transaction)
                 withContext(Dispatchers.Main) {
-                    if (result.isSuccess) onComplete() else onError()
+                    if (result.isSuccess) {
+                        onComplete(result.getOrDefault(0L))
+                    } else {
+                        onError()
+                    }
                 }
             } catch (_: Exception) {
                 withContext(Dispatchers.Main) { onError() }

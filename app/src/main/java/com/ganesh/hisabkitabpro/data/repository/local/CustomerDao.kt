@@ -8,6 +8,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CustomerDao {
+    @Query("SELECT id FROM customers WHERE isDeleted = 0")
+    suspend fun getActiveCustomerIds(): List<Long>
+
     @Query("SELECT * FROM customers WHERE isDeleted = 0 ORDER BY name ASC")
     fun getAllCustomers(): Flow<List<Customer>>
 

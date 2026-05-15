@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import com.ganesh.hisabkitabpro.R
+import com.ganesh.hisabkitabpro.core.storage.TxnBillAttachmentStore
 import com.ganesh.hisabkitabpro.domain.model.TransactionType
 import com.ganesh.hisabkitabpro.ui.viewmodel.TransactionViewModel
 import java.util.Locale
@@ -58,6 +59,7 @@ fun AddTransactionScreen(
     var note by rememberSaveable { mutableStateOf("") }
     var showOcrLowConfidenceBanner by remember { mutableStateOf(false) }
     var saving by remember { mutableStateOf(false) }
+    var pendingBillImageUri by remember { mutableStateOf<String?>(null) }
 
     val primaryColor = if (type == TransactionType.CREDIT) Color(0xFFD32F2F) else Color(0xFF2E7D32)
     val headerText = if (type == TransactionType.CREDIT) "Giving ₹" else "Receiving ₹"
@@ -93,6 +95,7 @@ fun AddTransactionScreen(
         if (data.note.isNotBlank()) {
             note = if (note.isBlank()) data.note else "${note.trim()} · ${data.note}"
         }
+        pendingBillImageUri = data.billImageUri
         viewModel.consumePendingScanPrefill()
         Toast.makeText(
             context,
@@ -254,8 +257,16 @@ fun AddTransactionScreen(
                                         amountPaise = paise,
                                         type = type,
                                         note = note,
-                                        onComplete = {
+                                        onComplete = { transactionId ->
                                             saving = false
+                                            pendingBillImageUri?.let { uri ->
+                                                TxnBillAttachmentStore.attachAfterTransactionSave(
+                                                    context,
+                                                    uri,
+                                                    transactionId,
+                                                )
+                                            }
+                                            pendingBillImageUri = null
                                             onTransactionAdded()
                                         },
                                         onError = {

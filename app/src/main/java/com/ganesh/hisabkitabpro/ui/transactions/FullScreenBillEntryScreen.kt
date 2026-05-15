@@ -64,15 +64,19 @@ internal data class BillLineUi(
         return null
     }
 
-    fun toBillItemOrNull(): BillItem? {
+    /**
+     * When [billUsesSettingsGst], line GST/CESS are ignored for rate unpacking — bill tax
+     * comes from Settings GST on subtotal only (P2 invoice consistency).
+     */
+    fun toBillItemOrNull(billUsesSettingsGst: Boolean = false): BillItem? {
         if (validationMessage() != null) return null
         val n = name.trim()
         if (n.isEmpty()) return null
         val q = qty.toDoubleOrNull() ?: return null
         val r = rate.toDoubleOrNull() ?: return null
         if (q <= 0 || r < 0) return null
-        val gst = gstPercent.toDoubleOrNull() ?: 0.0
-        val cess = cessPercent.toDoubleOrNull() ?: 0.0
+        val gst = if (billUsesSettingsGst) 0.0 else gstPercent.toDoubleOrNull() ?: 0.0
+        val cess = if (billUsesSettingsGst) 0.0 else cessPercent.toDoubleOrNull() ?: 0.0
         val taxFactor = 1 + ((gst + cess) / 100.0)
         val baseRate = if (rateIncludingTax && taxFactor > 0) r / taxFactor else r
         return BillItem(name = n, quantity = q, price = baseRate)
@@ -146,7 +150,7 @@ fun FullScreenBillEntryScreen(
     val defaultGstSlug = defaultLineGstPercentForSettings(settingsGstEnabled, settingsGstRatePercent)
     val pricing by remember(settingsGstEnabled, settingsGstRatePercent) {
         derivedStateOf {
-            val sub = lines.mapNotNull { it.toBillItemOrNull() }.sumOf { it.totalPrice }
+            val sub = lines.mapNotNull { it.toBillItemOrNull(settingsGstEnabled) }.sumOf { it.totalPrice }
             val gst = if (settingsGstEnabled && settingsGstRatePercent > 0) {
                 sub * (settingsGstRatePercent / 100.0)
             } else {
@@ -179,7 +183,7 @@ fun FullScreenBillEntryScreen(
     }
 
     fun parsedItems(): List<BillItem> =
-        lines.mapNotNull { it.toBillItemOrNull() }
+        lines.mapNotNull { it.toBillItemOrNull(settingsGstEnabled) }
 
     fun openEditorFor(line: BillLineUi?) {
         if (line == null) {

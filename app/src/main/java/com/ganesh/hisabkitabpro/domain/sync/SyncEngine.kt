@@ -2,6 +2,8 @@ package com.ganesh.hisabkitabpro.domain.sync
 
 import android.content.Context
 import android.util.Log
+import com.ganesh.hisabkitabpro.di.SyncCloudMirrorEntryPoint
+import dagger.hilt.android.EntryPointAccessors
 import com.ganesh.hisabkitabpro.data.repository.local.SyncDao
 import com.ganesh.hisabkitabpro.domain.model.Customer
 import com.ganesh.hisabkitabpro.domain.model.Transaction
@@ -222,6 +224,11 @@ object SyncEngine {
 
             when (outcome) {
                 is SyncItemOutcome.Success -> {
+                    if (entity.type == "TRANSACTION") {
+                        mirrorTransactionAfterFastApiSuccess(entity.payload)
+                    } else if (entity.type == "CUSTOMER") {
+                        mirrorCustomerAfterFastApiSuccess(entity.payload)
+                    }
                     commitDelete(dao, entity, reasonOnFail = "post-success cleanup")
                     succeeded++
                     lastFailureReason = null
@@ -264,6 +271,31 @@ object SyncEngine {
             finishedAt = System.currentTimeMillis()
         )
         SyncHealthMonitor.onCycleComplete(report)
+        if (succeeded > 0) {
+            runCatching { dao.clearSynced() }
+                .onFailure { Log.w(TAG, "clearSynced housekeeping failed", it) }
+        }
+    }
+
+    /** P2 — idempotent Firestore refresh after FastAPI confirms the row. */
+    private fun mirrorTransactionAfterFastApiSuccess(payload: String) {
+        val ctx = appContext ?: return
+        val txn = runCatching { gson.fromJson(payload, Transaction::class.java) }.getOrNull() ?: return
+        runCatching {
+            EntryPointAccessors.fromApplication(ctx, SyncCloudMirrorEntryPoint::class.java)
+                .selectiveCloudMirror()
+                .mirrorTransaction(txn)
+        }.onFailure { Log.w(TAG, "Post-upload transaction mirror failed", it) }
+    }
+
+    private fun mirrorCustomerAfterFastApiSuccess(payload: String) {
+        val ctx = appContext ?: return
+        val customer = runCatching { gson.fromJson(payload, Customer::class.java) }.getOrNull() ?: return
+        runCatching {
+            EntryPointAccessors.fromApplication(ctx, SyncCloudMirrorEntryPoint::class.java)
+                .selectiveCloudMirror()
+                .mirrorCustomer(customer)
+        }.onFailure { Log.w(TAG, "Post-upload customer mirror failed", it) }
     }
 
     /* ---------------- Per-type uploaders ---------------- */

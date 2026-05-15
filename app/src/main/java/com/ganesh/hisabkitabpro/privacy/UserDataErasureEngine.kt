@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.util.Log
 import androidx.work.WorkManager
 import com.ganesh.hisabkitabpro.core.storage.AppStoragePaths
+import com.ganesh.hisabkitabpro.core.storage.TxnBillAttachmentStore
 import com.ganesh.hisabkitabpro.data.local.AppDatabase
 import com.ganesh.hisabkitabpro.domain.sync.SyncWorker
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -40,6 +41,7 @@ class UserDataErasureEngine @Inject constructor(
         db.clearAllTables()
 
         wipeKnownCacheArtifacts(appContext)
+        TxnBillAttachmentStore.wipeAll(appContext)
         Log.i(TAG, "device_erasure_complete")
     }
 

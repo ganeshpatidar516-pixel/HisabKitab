@@ -1021,8 +1021,13 @@ fun NavGraphBuilder.hisabAppNavGraph(
                 customerId = scanCustomerId,
                 scanForPrefill = scanForPrefill,
                 liveLedgerAutoSaveEnabled = appSettings?.ocrLiveAutoSaveEnabled != false,
-                onPrefill = { amountText, noteLine, _, lowConf ->
-                    transactionViewModel.setPendingScanPrefill(amountText, noteLine, lowConf)
+                onPrefill = { amountText, noteLine, billImageUri, lowConf ->
+                    transactionViewModel.setPendingScanPrefill(
+                        amountText,
+                        noteLine,
+                        lowConf,
+                        billImageUri,
+                    )
                     navController.popBackStack()
                     if (scanCustomerId == 0L) {
                         navController.navigate("customers")
