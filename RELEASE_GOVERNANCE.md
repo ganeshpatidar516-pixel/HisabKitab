@@ -55,17 +55,30 @@ powershell -ExecutionPolicy Bypass -File ".\scripts\update-cert-pins.ps1"
 
 Then run `assembleRelease` on a device and verify login + sync once before Play upload.
 
+## Phase-9 live monitoring (P0 — configure before staged %)
+
+Full steps: `docs/ops/PHASE9_LIVE_MONITORING_SETUP.md`
+
+- [ ] Firebase Crashlytics alerts enabled (fatals + spike)
+- [ ] Play Android vitals alerts enabled
+- [ ] 48h daily ops review scheduled (first week of rollout)
+- [ ] BigQuery export linked (weekly review)
+
 ## Telemetry signals (Crashlytics)
 
-When crash reporting is ON in Settings, non-fatals include:
+When crash reporting is ON in Settings, each session includes `version_code`, `version_name`, `build_type`.
+
+Non-fatals include:
 
 | Signal | Meaning |
 |--------|---------|
 | `bill_pdf_not_ready` | Bill saved; PDF generation failed or share file missing |
+| `invoice_save_issue` | Bill save failed or PDF not ready after save |
 | `sync_cloud_mirror_failed` | FastAPI sync OK but Firestore re-mirror failed |
 | `balance_cache_drift` | SQL balance ≠ `balanceCache` (detect-only unless auto-repair ON) |
 | `balance_cache_repaired` | Opt-in or manual repair aligned cache to SQL sum |
 | `sync_cycle_degraded` | Sync cycle had permanent failures or auth expired |
+| `api_call_degraded` | API 5xx, network failure, or call ≥10s (path only, no PII) |
 
 ## Scope lock
 

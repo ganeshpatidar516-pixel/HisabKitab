@@ -90,6 +90,7 @@ object RetrofitClient {
         val b = OkHttpClient.Builder()
             .addInterceptor(logging)
             .addInterceptor(authInterceptor)
+            .addInterceptor(ApiOpsTelemetryInterceptor(ctx()))
             .authenticator(FirebaseBearerAuthenticator)
             .addInterceptor(gzipInterceptor)
             .connectionSpecs(listOf(tlsConnectionSpec))

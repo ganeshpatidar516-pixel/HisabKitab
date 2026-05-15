@@ -2,16 +2,88 @@ package com.ganesh.hisabkitabpro.core.firebase
 
 import android.content.Context
 import android.util.Log
+import com.ganesh.hisabkitabpro.BuildConfig
 import com.google.firebase.FirebaseApp
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 
 /**
- * Phase-8 — non-fatal production signals for support dashboards.
- * No PII: only ids, coarse entity types, and short reason codes.
+ * Phase-8/9 — non-fatal production signals for support dashboards.
+ * No PII: only ids, coarse entity types, paths, and short reason codes.
  */
 object ProductionOpsTelemetry {
 
     private const val TAG = "ProductionOpsTelemetry"
+    private const val SLOW_API_MS = 10_000L
+
+    /** Call once after Firebase init so every crash/non-fatal is tagged with build identity. */
+    fun applySessionKeys(context: Context) {
+        runCatching {
+            if (FirebaseApp.getApps(context.applicationContext).isEmpty()) return
+            val crashlytics = FirebaseCrashlytics.getInstance()
+            if (!crashlytics.isCrashlyticsCollectionEnabled) return
+            crashlytics.setCustomKey("version_code", BuildConfig.VERSION_CODE)
+            crashlytics.setCustomKey("version_name", BuildConfig.VERSION_NAME)
+            crashlytics.setCustomKey("build_type", if (BuildConfig.DEBUG) "debug" else "release")
+        }
+    }
+
+    fun recordInvoiceSaveOutcome(
+        context: Context,
+        success: Boolean,
+        pdfReady: Boolean,
+        source: String,
+        billId: Long = -1L,
+        transactionId: Long = -1L,
+    ) {
+        if (success && pdfReady) {
+            Log.i(TAG, "invoice_save_ok source=${source.take(40)}")
+            return
+        }
+        Log.w(
+            TAG,
+            "invoice_save_issue success=$success pdfReady=$pdfReady source=$source bill=$billId txn=$transactionId",
+        )
+        recordNonFatal(
+            context,
+            signal = "invoice_save_issue",
+            keys = mapOf(
+                "invoice_save_issue" to true,
+                "invoice_save_success" to success,
+                "invoice_save_pdf_ready" to pdfReady,
+                "invoice_save_source" to source.take(40),
+                "invoice_save_bill_id" to billId,
+                "invoice_save_txn_id" to transactionId,
+            ),
+        )
+    }
+
+    fun recordApiCall(
+        context: Context,
+        method: String,
+        path: String,
+        httpCode: Int,
+        durationMs: Long,
+        errorKind: String? = null,
+    ) {
+        val safePath = path.take(80)
+        val bucket = latencyBucket(durationMs)
+        Log.d(TAG, "api $method $safePath code=$httpCode ${durationMs}ms bucket=$bucket")
+        val degraded = httpCode >= 500 || httpCode < 0 || durationMs >= SLOW_API_MS
+        if (!degraded) return
+        recordNonFatal(
+            context,
+            signal = "api_call_degraded",
+            keys = mapOf(
+                "api_call_degraded" to true,
+                "api_method" to method.take(8),
+                "api_path" to safePath,
+                "api_http_code" to httpCode,
+                "api_duration_ms" to durationMs.coerceAtMost(120_000L),
+                "api_latency_bucket" to bucket,
+                "api_error_kind" to (errorKind?.take(40) ?: ""),
+            ),
+        )
+    }
 
     fun recordBillPdfNotReady(
         context: Context,
@@ -83,6 +155,14 @@ object ProductionOpsTelemetry {
                 "sync_mirror_reason" to safeReason,
             ),
         )
+    }
+
+    private fun latencyBucket(durationMs: Long): String = when {
+        durationMs < 500 -> "lt_500ms"
+        durationMs < 2_000 -> "500ms_2s"
+        durationMs < 5_000 -> "2s_5s"
+        durationMs < 10_000 -> "5s_10s"
+        else -> "gte_10s"
     }
 
     private fun recordNonFatal(

@@ -336,22 +336,35 @@ class TransactionRepositoryImpl @Inject constructor(
             val pdfReady = withContext(Dispatchers.IO) {
                 generatePdfForTransaction(result.second) != null
             }
+            val billResult = CreateBillResult(
+                billId = result.first,
+                transactionId = result.second,
+                pdfReady = pdfReady,
+            )
+            ProductionOpsTelemetry.recordInvoiceSaveOutcome(
+                context,
+                success = true,
+                pdfReady = pdfReady,
+                source = "createBill",
+                billId = billResult.billId,
+                transactionId = billResult.transactionId,
+            )
             if (!pdfReady) {
                 ProductionOpsTelemetry.recordBillPdfNotReady(
                     context,
-                    transactionId = result.second,
-                    billId = result.first,
+                    transactionId = billResult.transactionId,
+                    billId = billResult.billId,
                     source = "createBill",
                 )
             }
-            Result.success(
-                CreateBillResult(
-                    billId = result.first,
-                    transactionId = result.second,
-                    pdfReady = pdfReady,
-                ),
-            )
+            Result.success(billResult)
         } catch (e: Exception) {
+            ProductionOpsTelemetry.recordInvoiceSaveOutcome(
+                context,
+                success = false,
+                pdfReady = false,
+                source = "createBill",
+            )
             Result.failure(e)
         }
     }
@@ -426,22 +439,35 @@ class TransactionRepositoryImpl @Inject constructor(
                 )
                 itemizedOk || generatePdfForTransaction(result.second) != null
             }
+            val billResult = CreateBillResult(
+                billId = result.first,
+                transactionId = result.second,
+                pdfReady = pdfReady,
+            )
+            ProductionOpsTelemetry.recordInvoiceSaveOutcome(
+                context,
+                success = true,
+                pdfReady = pdfReady,
+                source = "createBillWithLineItems",
+                billId = billResult.billId,
+                transactionId = billResult.transactionId,
+            )
             if (!pdfReady) {
                 ProductionOpsTelemetry.recordBillPdfNotReady(
                     context,
-                    transactionId = result.second,
-                    billId = result.first,
+                    transactionId = billResult.transactionId,
+                    billId = billResult.billId,
                     source = "createBillWithLineItems",
                 )
             }
-            Result.success(
-                CreateBillResult(
-                    billId = result.first,
-                    transactionId = result.second,
-                    pdfReady = pdfReady,
-                ),
-            )
+            Result.success(billResult)
         } catch (e: Exception) {
+            ProductionOpsTelemetry.recordInvoiceSaveOutcome(
+                context,
+                success = false,
+                pdfReady = false,
+                source = "createBillWithLineItems",
+            )
             Result.failure(e)
         }
     }

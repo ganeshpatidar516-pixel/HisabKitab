@@ -61,6 +61,7 @@ object FirebaseTelemetryBootstrap {
             crashlytics.setCustomKey("app_flavor", "hisabkitabpro")
             FirebaseAnalytics.getInstance(context.applicationContext)
                 .setAnalyticsCollectionEnabled(toggle.isAnalyticsEnabled())
+            ProductionOpsTelemetry.applySessionKeys(context.applicationContext)
             Log.i(
                 TAG,
                 "Firebase initialized — crash=${toggle.isCrashReportingEnabled()}, " +
