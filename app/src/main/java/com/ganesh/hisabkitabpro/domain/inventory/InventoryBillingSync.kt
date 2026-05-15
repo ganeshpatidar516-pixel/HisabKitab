@@ -1,7 +1,7 @@
 package com.ganesh.hisabkitabpro.domain.inventory
 
 import android.util.Log
-import com.ganesh.hisabkitabpro.data.local.ProductDao
+import com.ganesh.hisabkitabpro.data.repository.local.ProductDao
 import com.ganesh.hisabkitabpro.domain.model.BillItem
 import javax.inject.Inject
 import javax.inject.Singleton

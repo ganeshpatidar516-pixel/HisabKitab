@@ -3,7 +3,7 @@ package com.ganesh.hisabkitabpro.commandos.adapters.hisabkitab
 import com.ganesh.hisabkitabpro.addon.reminder.AssistantCustomerReminderDispatcher
 import com.ganesh.hisabkitabpro.commandos.adapters.contracts.DomainAdapter
 import com.ganesh.hisabkitabpro.commandos.adapters.contracts.ReminderDispatchReport
-import com.ganesh.hisabkitabpro.data.local.ProductDao
+import com.ganesh.hisabkitabpro.data.repository.local.ProductDao
 import com.ganesh.hisabkitabpro.data.local.ProductEntity
 import com.ganesh.hisabkitabpro.domain.inventory.InventoryCommandParser
 import com.ganesh.hisabkitabpro.domain.model.Customer

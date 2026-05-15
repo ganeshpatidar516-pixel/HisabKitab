@@ -2,6 +2,8 @@
 
 package com.ganesh.hisabkitabpro.ui.suppliers
 
+import com.ganesh.hisabkitabpro.data.prefs.SupplierCreditTermsPrefs
+
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.graphics.BitmapFactory

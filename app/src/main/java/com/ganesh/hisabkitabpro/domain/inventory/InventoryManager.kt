@@ -1,7 +1,7 @@
 package com.ganesh.hisabkitabpro.domain.inventory
 
 import com.ganesh.hisabkitabpro.data.local.ProductEntity
-import com.ganesh.hisabkitabpro.data.local.ProductDao
+import com.ganesh.hisabkitabpro.data.repository.local.ProductDao
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton

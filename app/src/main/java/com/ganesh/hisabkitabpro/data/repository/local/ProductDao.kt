@@ -1,6 +1,7 @@
-package com.ganesh.hisabkitabpro.data.local
+package com.ganesh.hisabkitabpro.data.repository.local
 
 import androidx.room.*
+import com.ganesh.hisabkitabpro.data.local.ProductEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao

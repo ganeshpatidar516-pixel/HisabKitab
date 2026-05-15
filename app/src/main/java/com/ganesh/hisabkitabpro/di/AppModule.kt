@@ -18,16 +18,12 @@ import com.ganesh.hisabkitabpro.commandos.sync.OfflineCommandJournal
 import com.ganesh.hisabkitabpro.commandos.sync.PersistentOfflineCommandJournal
 import com.ganesh.hisabkitabpro.commandos.sync.QueueHealthMetrics
 import com.ganesh.hisabkitabpro.data.local.AppDatabase
-import com.ganesh.hisabkitabpro.data.local.ReminderDao
-import com.ganesh.hisabkitabpro.data.local.ProductDao
 import com.ganesh.hisabkitabpro.data.repository.local.*
+import com.ganesh.hisabkitabpro.addon.audit.AuditLogDao
 import com.ganesh.hisabkitabpro.addon.audit.AuditLogRecorder
-import com.ganesh.hisabkitabpro.data.repository.*
-import com.ganesh.hisabkitabpro.domain.repository.*
 import com.ganesh.hisabkitabpro.domain.backup.CloudBackupManager
-import com.ganesh.hisabkitabpro.domain.businesscard.repository.BusinessCardRepository
-import com.ganesh.hisabkitabpro.domain.businesscard.repository.BusinessCardRepositoryImpl
 import com.ganesh.hisabkitabpro.domain.cloud.SelectiveCloudMirror
+import com.ganesh.hisabkitabpro.data.remote.api.ActionApi
 import com.ganesh.hisabkitabpro.network.api.*
 import com.ganesh.hisabkitabpro.network.RetrofitClient
 import com.ganesh.hisabkitabpro.security.SecurityManager
@@ -92,6 +88,9 @@ object AppModule {
 
     @Provides
     fun provideStaffPayrollDao(db: AppDatabase): StaffPayrollDao = db.staffPayrollDao()
+
+    @Provides
+    fun provideAuditLogDao(db: AppDatabase): AuditLogDao = db.auditLogDao()
 
     @Provides
     @Singleton
@@ -223,89 +222,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideSettingsRepository(
-        settingsDao: SettingsDao,
-        businessProfileDao: BusinessProfileDao,
-        settingsApi: SettingsApi,
-        selectiveCloudMirror: SelectiveCloudMirror
-    ): SettingsRepository {
-        return SettingsRepositoryImpl(settingsDao, businessProfileDao, settingsApi, selectiveCloudMirror)
+    fun provideActionApi(): ActionApi {
+        return RetrofitClient.retrofit.create(ActionApi::class.java)
     }
 
-    @Provides
-    @Singleton
-    fun provideCustomerRepository(
-        customerDao: Lazy<CustomerDao>,
-        selectiveCloudMirror: SelectiveCloudMirror
-    ): CustomerRepository {
-        return CustomerRepositoryImpl(customerDao, selectiveCloudMirror)
-    }
-
-    @Provides
-    @Singleton
-    fun provideSupplierRepository(
-        supplierDao: Lazy<SupplierDao>
-    ): SupplierRepository {
-        return SupplierRepositoryImpl(supplierDao)
-    }
-
-    @Provides
-    @Singleton
-    fun providePartyRepository(
-        partyDao: PartyDao
-    ): PartyRepository {
-        return PartyRepositoryImpl(partyDao)
-    }
-
-    @Provides
-    @Singleton
-    fun provideTransactionRepository(
-        database: Lazy<AppDatabase>,
-        transactionDao: Lazy<TransactionDao>,
-        billDao: Lazy<BillDao>,
-        customerDao: Lazy<CustomerDao>,
-        cloudBackupManager: CloudBackupManager,
-        auditLogRecorder: AuditLogRecorder,
-        selectiveCloudMirror: SelectiveCloudMirror,
-        @ApplicationContext context: Context
-    ): TransactionRepository {
-        return TransactionRepositoryImpl(
-            database,
-            transactionDao,
-            billDao,
-            customerDao,
-            cloudBackupManager,
-            auditLogRecorder,
-            selectiveCloudMirror,
-            context
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideBusinessCardRepository(
-        settingsRepository: SettingsRepository
-    ): BusinessCardRepository {
-        return BusinessCardRepositoryImpl(settingsRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideInvoiceRepository(
-        invoiceDao: InvoiceDao,
-        transactionDao: TransactionDao,
-        transactionRepository: TransactionRepository,
-        customerRepository: CustomerRepository,
-        @ApplicationContext context: Context,
-        appDatabase: Lazy<AppDatabase>
-    ): InvoiceRepository {
-        return InvoiceRepositoryImpl(
-            invoiceDao,
-            transactionDao,
-            transactionRepository,
-            customerRepository,
-            context,
-            appDatabase
-        )
-    }
 }

@@ -16,9 +16,12 @@ import kotlin.math.max
 import javax.inject.Inject
 
 /**
- * HISABKITAB PRO - REMOTE CUSTOMER REPOSITORY
- * Fixed compilation by implementing all interface members.
+ * Alternate API-backed [CustomerRepository] — **not** wired in Hilt; live app uses [CustomerRepositoryImpl] (Room).
  */
+@Deprecated(
+    message = "Not used in DI graph. Local Room CustomerRepositoryImpl is the production path.",
+    level = DeprecationLevel.WARNING,
+)
 class RemoteCustomerRepository @Inject constructor() : CustomerRepository {
 
     private val api: CustomerApi =

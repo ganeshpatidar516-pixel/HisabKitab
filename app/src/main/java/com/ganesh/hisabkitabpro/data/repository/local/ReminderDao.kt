@@ -1,6 +1,7 @@
-package com.ganesh.hisabkitabpro.data.local
+package com.ganesh.hisabkitabpro.data.repository.local
 
 import androidx.room.*
+import com.ganesh.hisabkitabpro.data.local.ReminderEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -28,13 +29,11 @@ interface ReminderDao {
     )
     suspend fun getDueRemindersNotSent(nowMillis: Long): List<ReminderEntity>
 
-    /** Clears pending auto-pilot rows before inserting a fresh follow-up for this customer. */
     @Query(
         "DELETE FROM reminders WHERE customerId = :customerId AND isSent = 0 AND counterpartyKind = 'CUSTOMER'"
     )
     suspend fun deletePendingUnsentForCustomer(customerId: Long)
 
-    /** Pending supplier-party (unified [com.ganesh.hisabkitabpro.domain.model.Party]) follow-ups. */
     @Query(
         "DELETE FROM reminders WHERE partyId = :partyId AND isSent = 0 AND counterpartyKind = 'PARTY_SUPPLIER'"
     )

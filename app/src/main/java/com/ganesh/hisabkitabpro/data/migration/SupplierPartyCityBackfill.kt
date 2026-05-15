@@ -3,7 +3,7 @@ package com.ganesh.hisabkitabpro.data.migration
 import android.content.Context
 import android.util.Log
 import com.ganesh.hisabkitabpro.data.local.AppDatabase
-import com.ganesh.hisabkitabpro.ui.suppliers.SupplierProfilePrefs
+import com.ganesh.hisabkitabpro.data.prefs.SupplierProfilePrefs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

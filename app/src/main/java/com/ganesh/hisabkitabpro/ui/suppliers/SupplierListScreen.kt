@@ -1,5 +1,7 @@
 package com.ganesh.hisabkitabpro.ui.suppliers
 
+import com.ganesh.hisabkitabpro.data.prefs.SupplierProfilePrefs
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement

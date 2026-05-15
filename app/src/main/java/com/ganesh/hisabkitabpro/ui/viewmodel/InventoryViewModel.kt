@@ -2,7 +2,7 @@ package com.ganesh.hisabkitabpro.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ganesh.hisabkitabpro.data.local.ProductDao
+import com.ganesh.hisabkitabpro.data.repository.local.ProductDao
 import com.ganesh.hisabkitabpro.data.local.ProductEntity
 import com.ganesh.hisabkitabpro.domain.inventory.InventoryScanNormalizer
 import dagger.hilt.android.lifecycle.HiltViewModel

@@ -7,7 +7,7 @@ import com.ganesh.hisabkitabpro.core.locale.AppLocaleManager
 import com.ganesh.hisabkitabpro.data.local.AppDatabase
 import com.ganesh.hisabkitabpro.data.local.ReminderCounterpartyKind
 import com.ganesh.hisabkitabpro.data.local.ReminderEntity
-import com.ganesh.hisabkitabpro.ui.suppliers.SupplierCreditTermsPrefs
+import com.ganesh.hisabkitabpro.data.prefs.SupplierCreditTermsPrefs
 import java.text.NumberFormat
 import java.util.Locale
 import java.util.concurrent.TimeUnit

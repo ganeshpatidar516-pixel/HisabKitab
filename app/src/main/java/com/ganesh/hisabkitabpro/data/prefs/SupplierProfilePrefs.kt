@@ -1,7 +1,8 @@
-package com.ganesh.hisabkitabpro.ui.suppliers
+package com.ganesh.hisabkitabpro.data.prefs
 
 import android.content.Context
 
+/** Supplier city stored in SharedPreferences until fully mirrored on [Party]. */
 object SupplierProfilePrefs {
     private const val PREFS = "supplier_profile_prefs"
 

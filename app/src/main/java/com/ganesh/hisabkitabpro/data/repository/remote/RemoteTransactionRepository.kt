@@ -15,6 +15,13 @@ import kotlinx.coroutines.flow.flow
 import kotlin.math.max
 import javax.inject.Inject
 
+/**
+ * Alternate API-backed [TransactionRepository] — **not** wired in Hilt; live app uses [TransactionRepositoryImpl].
+ */
+@Deprecated(
+    message = "Not used in DI graph. Local Room TransactionRepositoryImpl is the production path.",
+    level = DeprecationLevel.WARNING,
+)
 class RemoteTransactionRepository @Inject constructor(
     private val api: TransactionApi
 ) : TransactionRepository {

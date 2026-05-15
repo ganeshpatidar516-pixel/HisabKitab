@@ -1,7 +1,8 @@
-package com.ganesh.hisabkitabpro.ui.suppliers
+package com.ganesh.hisabkitabpro.data.prefs
 
 import android.content.Context
 
+/** Per-supplier credit term days for reminder scheduling. */
 object SupplierCreditTermsPrefs {
     private const val PREFS = "supplier_credit_terms_prefs"
 
