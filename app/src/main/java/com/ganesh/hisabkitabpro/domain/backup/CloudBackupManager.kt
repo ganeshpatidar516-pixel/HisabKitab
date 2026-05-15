@@ -1,6 +1,7 @@
 package com.ganesh.hisabkitabpro.domain.backup
 
 import android.content.Context
+import com.ganesh.hisabkitabpro.core.storage.StorageSpaceGuard
 import com.ganesh.hisabkitabpro.data.local.AppDatabase
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
@@ -37,6 +38,9 @@ class CloudBackupManager @Inject constructor(
 
     suspend fun backupDatabaseToDrive(): Result<Unit> = withContext(Dispatchers.IO) {
         try {
+            if (!StorageSpaceGuard.hasMinFreeSpace(context, minFreeMb = 64L)) {
+                return@withContext Result.failure(Exception("Not enough free storage for backup"))
+            }
             val account = GoogleSignIn.getLastSignedInAccount(context)
                 ?: return@withContext Result.failure(Exception("User not signed in to Google"))
 

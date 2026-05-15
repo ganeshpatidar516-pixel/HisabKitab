@@ -22,6 +22,7 @@ import com.ganesh.hisabkitabpro.domain.repository.CustomerFullData
 import com.ganesh.hisabkitabpro.domain.repository.CreateBillResult
 import com.ganesh.hisabkitabpro.domain.backup.CloudBackupManager
 import com.ganesh.hisabkitabpro.domain.cloud.SelectiveCloudMirror
+import com.ganesh.hisabkitabpro.core.storage.AtomicFileWrites
 import com.ganesh.hisabkitabpro.domain.ledger.InvoicePdfGenerator
 import com.ganesh.hisabkitabpro.domain.sync.SyncEngine
 import com.ganesh.hisabkitabpro.addon.audit.AuditLogRecorder
@@ -145,6 +146,10 @@ class TransactionRepositoryImpl @Inject constructor(
     }
 
     private suspend fun generatePdfForTransaction(transactionId: Long): File? {
+        if (!com.ganesh.hisabkitabpro.core.storage.StorageSpaceGuard.hasMinFreeSpace(context)) {
+            android.util.Log.w("TransactionRepository", "PDF skipped — low storage")
+            return null
+        }
         return withContext(Dispatchers.IO) {
             val fullTransaction = transactionDao.getTransactionById(transactionId)
             if (fullTransaction != null) {
@@ -197,9 +202,11 @@ class TransactionRepositoryImpl @Inject constructor(
             val src = File(path)
             if (!src.exists()) return@withContext false
             val dest = InvoicePdfGenerator.getInvoicePdfFile(context, transactionId)
-            src.copyTo(dest, overwrite = true)
+            val ok = AtomicFileWrites.writeAtomically(context, dest) { tmp ->
+                src.copyTo(tmp, overwrite = true)
+            }
             src.delete()
-            true
+            ok
         }
     }
 

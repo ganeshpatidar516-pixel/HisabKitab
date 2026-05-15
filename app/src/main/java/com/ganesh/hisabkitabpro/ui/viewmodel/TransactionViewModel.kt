@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 data class DashboardState(
@@ -188,16 +189,38 @@ class TransactionViewModel @Inject constructor(
         return repository.getTransactionById(id).flowOn(Dispatchers.IO)
     }
 
-    fun addTransaction(customerId: Long, amountPaise: Long, type: TransactionType, note: String? = null) {
+    private val addTransactionInFlight = AtomicBoolean(false)
+
+    fun addTransaction(
+        customerId: Long,
+        amountPaise: Long,
+        type: TransactionType,
+        note: String? = null,
+        onComplete: () -> Unit = {},
+        onError: () -> Unit = {},
+    ) {
+        if (!addTransactionInFlight.compareAndSet(false, true)) {
+            onError()
+            return
+        }
         viewModelScope.launch(Dispatchers.IO) {
-            val transaction = Transaction(
-                customerId = customerId,
-                amount = amountPaise,
-                type = type,
-                note = note,
-                txnRef = UUID.randomUUID().toString()
-            )
-            repository.addTransaction(transaction)
+            try {
+                val transaction = Transaction(
+                    customerId = customerId,
+                    amount = amountPaise,
+                    type = type,
+                    note = note,
+                    txnRef = UUID.randomUUID().toString(),
+                )
+                val result = repository.addTransaction(transaction)
+                withContext(Dispatchers.Main) {
+                    if (result.isSuccess) onComplete() else onError()
+                }
+            } catch (_: Exception) {
+                withContext(Dispatchers.Main) { onError() }
+            } finally {
+                addTransactionInFlight.set(false)
+            }
         }
     }
 

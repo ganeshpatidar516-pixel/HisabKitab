@@ -69,6 +69,7 @@ import com.ganesh.hisabkitabpro.ui.inventory.InventoryScreen
 import com.ganesh.hisabkitabpro.ui.help.HelpScreen
 import com.ganesh.hisabkitabpro.ui.help.PrivacyPolicyScreen
 import com.ganesh.hisabkitabpro.ui.navigation.AppRoutes
+import com.ganesh.hisabkitabpro.ui.sync.SyncAuthExpiredBanner
 import com.ganesh.hisabkitabpro.ui.navigation.bottomNavItems
 import com.ganesh.hisabkitabpro.ui.navigation.hisabAppNavGraph
 import com.ganesh.hisabkitabpro.domain.model.TransactionType
@@ -271,11 +272,19 @@ fun MainContainer(
             }
         }
     ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = AppRoutes.Dashboard,
-            modifier = Modifier.padding(innerPadding)
-        ) {
+        Column(modifier = Modifier.padding(innerPadding)) {
+            SyncAuthExpiredBanner(
+                onOpenCloudSettings = {
+                    navController.navigate(AppRoutes.SettingsCloud) {
+                        launchSingleTop = true
+                    }
+                },
+            )
+            NavHost(
+                navController = navController,
+                startDestination = AppRoutes.Dashboard,
+                modifier = Modifier.weight(1f),
+            ) {
             hisabAppNavGraph(
                 navController = navController,
                 activity = activity,
@@ -288,6 +297,7 @@ fun MainContainer(
                 pendingConfirmedCommand = pendingConfirmedCommand,
                 appSettings = appSettings,
             )
+        }
         }
     }
 

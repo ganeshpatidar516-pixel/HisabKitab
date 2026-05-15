@@ -19,8 +19,11 @@ object CoreModule {
 
     @Provides
     @Singleton
-    fun provideGlobalCrashHandler(@ApplicationContext context: Context): GlobalCrashHandler {
-        return GlobalCrashHandler(context)
+    fun provideGlobalCrashHandler(
+        @ApplicationContext context: Context,
+        featureRecoveryManager: FeatureRecoveryManager,
+    ): GlobalCrashHandler {
+        return GlobalCrashHandler(context, featureRecoveryManager)
     }
 
     @Provides

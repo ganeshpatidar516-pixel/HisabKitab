@@ -419,6 +419,9 @@
     <string name="settings_enterprise_sub_privacy_data">Account &amp; data deletion</string>
     <string name="settings_enterprise_sub_privacy_policy">Legal &amp; transparency</string>
     <string name="settings_enterprise_sync_retry">Retry failed sync</string>
+    <string name="sync_auth_expired_banner_message">Cloud sync paused — sign in again. Your local ledger is safe.</string>
+    <string name="sync_auth_expired_banner_action">Sign in</string>
+    <string name="storage_low_toast">Phone storage is low. Free some space and try again.</string>
     <string name="settings_enterprise_help_center_title">Help center</string>
     <!-- Main Settings hub rows → nested Billing / Cloud screens -->
     <string name="settings_hub_billing_sub">Invoice templates &amp; GST on bills</string>

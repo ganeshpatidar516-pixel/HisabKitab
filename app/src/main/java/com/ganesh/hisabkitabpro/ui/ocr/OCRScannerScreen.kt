@@ -83,7 +83,10 @@ import java.io.File
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -216,13 +219,24 @@ fun OCRScannerScreen(
     PrivacySecureEffect()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val coroutineScope = rememberCoroutineScope()
+    val ocrJob = remember { SupervisorJob() }
+    val coroutineScope = rememberCoroutineScope { ocrJob }
     /** Wave 2 — serializes live-frame auto-save so queued jobs cannot each insert before [autoSaved] flips. */
     val liveAutoSaveMutex = remember { Mutex() }
     val autoOcrFromLedger = customerId > 0L && !scanForPrefill && liveLedgerAutoSaveEnabled
     val analysisExecutor = remember { Executors.newSingleThreadExecutor() }
     DisposableEffect(Unit) {
-        onDispose { analysisExecutor.shutdown() }
+        onDispose {
+            ocrJob.cancel()
+            analysisExecutor.shutdown()
+            CoroutineScope(Dispatchers.IO).launch {
+                AppStoragePaths.ocrCacheDir(context).listFiles()?.forEach { file ->
+                    if (file.isFile && file.name.startsWith("ocr_import_")) {
+                        file.delete()
+                    }
+                }
+            }
+        }
     }
 
     var showAcquisitionSheet by remember { mutableStateOf(true) }

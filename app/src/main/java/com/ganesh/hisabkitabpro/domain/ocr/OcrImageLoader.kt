@@ -7,6 +7,7 @@ import android.graphics.Matrix
 import android.net.Uri
 import androidx.exifinterface.media.ExifInterface
 import com.ganesh.hisabkitabpro.core.storage.AppStoragePaths
+import com.ganesh.hisabkitabpro.core.storage.StorageSpaceGuard
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
@@ -53,6 +54,9 @@ object OcrImageLoader {
      * Caller deletes the file when no longer needed. Deletes partial file on failure or oversize.
      */
     fun copyContentUriToOcrCacheFile(context: Context, uri: Uri): OcrGalleryImportCopy {
+        if (!StorageSpaceGuard.hasMinFreeSpace(context, minFreeMb = 48L)) {
+            return OcrGalleryImportCopy.Failed
+        }
         val dest = File(AppStoragePaths.ocrCacheDir(context), "ocr_import_${System.currentTimeMillis()}.bin")
         return try {
             val reportedLen = runCatching {

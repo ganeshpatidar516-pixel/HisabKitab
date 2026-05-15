@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
 import androidx.core.content.FileProvider
+import com.ganesh.hisabkitabpro.core.storage.AtomicFileWrites
 import com.ganesh.hisabkitabpro.data.local.AppDatabase
 import com.ganesh.hisabkitabpro.domain.model.Customer
 import com.ganesh.hisabkitabpro.domain.model.Transaction
@@ -87,9 +88,35 @@ object InvoicePdfGenerator {
         val file = File(sharedDir, fileName)
 
         return try {
-            val writer = PdfWriter(file)
-            val pdf = PdfDocument(writer)
-            val document = Document(pdf)
+            val wrote = AtomicFileWrites.writeAtomically(appCtx, file) { tmp ->
+                val writer = PdfWriter(tmp)
+                val pdf = PdfDocument(writer)
+                val document = Document(pdf)
+                renderReceiptDocument(
+                    appCtx = appCtx,
+                    document = document,
+                    pdf = pdf,
+                    profile = profile,
+                    customer = customer,
+                    transaction = transaction,
+                )
+            }
+            if (wrote) file else null
+        } catch (e: Exception) {
+            Log.e(TAG, "Error generating PDF", e)
+            null
+        }
+    }
+
+    private fun renderReceiptDocument(
+        appCtx: Context,
+        document: Document,
+        pdf: PdfDocument,
+        profile: com.ganesh.hisabkitabpro.domain.model.BusinessProfile?,
+        customer: Customer,
+        transaction: Transaction,
+    ) {
+        try {
 
             val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
             val sdfDate = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
@@ -218,10 +245,11 @@ object InvoicePdfGenerator {
             )
 
             document.close()
-            file
         } catch (e: Exception) {
-            Log.e(TAG, "Error generating PDF", e)
-            null
+            Log.e(TAG, "Error rendering receipt PDF body", e)
+            runCatching { document.close() }
+            runCatching { pdf.close() }
+            throw e
         }
     }
 

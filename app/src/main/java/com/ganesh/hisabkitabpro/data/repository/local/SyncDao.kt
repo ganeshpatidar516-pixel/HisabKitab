@@ -73,4 +73,20 @@ interface SyncDao {
 
     @Query("DELETE FROM sync_queue WHERE status = 'SYNCED'")
     suspend fun clearSynced()
+
+    /** Coalesce duplicate PENDING uploads with identical payload (Phase-5 P1). */
+    @Query("DELETE FROM sync_queue WHERE status = 'PENDING' AND type = :type AND payload = :payload")
+    suspend fun deletePendingWithExactPayload(type: String, payload: String): Int
+
+    @Query(
+        "DELETE FROM sync_queue WHERE status = 'PENDING' AND type = 'TRANSACTION' " +
+            "AND payload LIKE '%' || :txnRef || '%'",
+    )
+    suspend fun deletePendingTransactionsByTxnRef(txnRef: String): Int
+
+    @Query(
+        "DELETE FROM sync_queue WHERE status = 'PENDING' AND type = 'CUSTOMER' " +
+            "AND payload LIKE '%\"id\":' || :customerId || '%'",
+    )
+    suspend fun deletePendingCustomersById(customerId: Long): Int
 }

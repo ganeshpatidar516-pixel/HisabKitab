@@ -32,6 +32,8 @@ import com.ganesh.hisabkitabpro.commandos.SuperCommandService
 import com.ganesh.hisabkitabpro.commandos.model.CommandResult
 import com.ganesh.hisabkitabpro.core.billing.PREFS_KEY_HTML_INVOICE_TEMPLATE_ID
 import com.ganesh.hisabkitabpro.data.prefs.SupplierProfilePrefs
+import com.ganesh.hisabkitabpro.core.crash.SafeFeature
+import com.ganesh.hisabkitabpro.di.FeatureRecoveryEntryPoint
 import com.ganesh.hisabkitabpro.di.OcrBillProcessorEntryPoint
 import com.ganesh.hisabkitabpro.domain.ai.AIAction
 import com.ganesh.hisabkitabpro.domain.ai.AIResponse
@@ -114,6 +116,14 @@ fun NavGraphBuilder.hisabAppNavGraph(
         }
 
         composable("ai_assistant") {
+            val appContext = LocalContext.current.applicationContext
+            val featureRecovery = remember(appContext) {
+                EntryPointAccessors.fromApplication(
+                    appContext,
+                    FeatureRecoveryEntryPoint::class.java,
+                ).featureRecoveryManager()
+            }
+            SafeFeature(featureId = "ai_assistant", recoveryManager = featureRecovery) {
             val scope = rememberCoroutineScope()
             val txState by transactionViewModel.allTransactions.collectAsStateWithLifecycle()
             val assistantCustomerNames by customerViewModel.assistantCustomerNames.collectAsStateWithLifecycle()
@@ -269,6 +279,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
                 onActionClick = { route -> navController.navigate(route) },
                 onNavigateBack = { navController.popBackStack() }
             )
+            }
         }
 
         composable("business_insights") {

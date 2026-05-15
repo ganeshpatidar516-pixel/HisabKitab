@@ -16,6 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,9 +49,10 @@ fun AddTransactionScreen(
     onOpenFullBill: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    var amountText by remember { mutableStateOf("0") }
-    var note by remember { mutableStateOf("") }
+    var amountText by rememberSaveable { mutableStateOf("0") }
+    var note by rememberSaveable { mutableStateOf("") }
     var showOcrLowConfidenceBanner by remember { mutableStateOf(false) }
+    var saving by remember { mutableStateOf(false) }
 
     val primaryColor = if (type == TransactionType.CREDIT) Color(0xFFD32F2F) else Color(0xFF2E7D32)
     val headerText = if (type == TransactionType.CREDIT) "Giving ₹" else "Receiving ₹"
@@ -212,25 +214,38 @@ fun AddTransactionScreen(
                         // 🔥 3. TRANSACTION SYSTEM Button
                         Button(
                             onClick = {
+                                if (saving) return@Button
                                 val rupees = amountText.toDoubleOrNull() ?: 0.0
                                 val paise = (rupees * 100).toLong()
-                                
                                 if (paise > 0) {
+                                    saving = true
                                     viewModel.addTransaction(
                                         customerId = customerId,
                                         amountPaise = paise,
                                         type = type,
-                                        note = note
+                                        note = note,
+                                        onComplete = {
+                                            saving = false
+                                            onTransactionAdded()
+                                        },
+                                        onError = { saving = false },
                                     )
-                                    onTransactionAdded()
                                 }
                             },
                             modifier = Modifier.weight(1f).height(56.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
                             shape = RoundedCornerShape(12.dp),
-                            enabled = amountText != "0"
+                            enabled = amountText != "0" && !saving,
                         ) {
-                            Text("Confirm ${type.name}", fontWeight = FontWeight.Bold)
+                            if (saving) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(22.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp,
+                                )
+                            } else {
+                                Text("Confirm ${type.name}", fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
 

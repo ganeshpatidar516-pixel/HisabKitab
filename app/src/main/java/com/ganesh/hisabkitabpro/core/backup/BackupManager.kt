@@ -1,39 +1,60 @@
 package com.ganesh.hisabkitabpro.core.backup
 
 import android.content.Context
-import androidx.work.*
+import android.util.Log
+import androidx.work.CoroutineWorker
+import androidx.work.WorkerParameters
 import com.ganesh.hisabkitabpro.core.background.TaskManager
+import com.ganesh.hisabkitabpro.core.storage.StorageSpaceGuard
+import com.ganesh.hisabkitabpro.di.BackupWorkerEntryPoint
+import dagger.hilt.android.EntryPointAccessors
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class BackupManager @Inject constructor(
     private val context: Context,
-    private val taskManager: TaskManager
+    private val taskManager: TaskManager,
 ) {
     fun triggerBackup() {
         taskManager.runBackgroundTask(
             BackupWorker::class.java,
-            "cloud_backup"
+            "cloud_backup",
         )
     }
 }
 
 class BackupWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+
     override suspend fun doWork(): Result {
-        return try {
-            // Perform backup logic
-            // 1. Create local backup file
-            // 2. Attempt upload
-            // 3. If fails, retry (WorkManager handles this with BackoffPolicy)
-            Result.success()
-        } catch (e: Exception) {
-            if (runAttemptCount < 3) {
-                Result.retry()
-            } else {
-                // Save locally and fail gracefully
-                Result.failure()
-            }
+        if (!StorageSpaceGuard.hasMinFreeSpace(applicationContext, minFreeMb = 64L)) {
+            Log.w(TAG, "Backup skipped — insufficient free storage")
+            return Result.failure()
         }
+        return try {
+            val manager = EntryPointAccessors.fromApplication(
+                applicationContext,
+                BackupWorkerEntryPoint::class.java,
+            ).cloudBackupManager()
+            val outcome = manager.backupDatabaseToDrive()
+            if (outcome.isSuccess) {
+                Result.success()
+            } else {
+                val msg = outcome.exceptionOrNull()?.message.orEmpty()
+                Log.w(TAG, "Drive backup failed: $msg")
+                if (runAttemptCount < 2 && msg.contains("signed in", ignoreCase = true).not()) {
+                    Result.retry()
+                } else {
+                    Result.failure()
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "BackupWorker error", e)
+            if (runAttemptCount < 2) Result.retry() else Result.failure()
+        }
+    }
+
+    companion object {
+        private const val TAG = "BackupWorker"
     }
 }

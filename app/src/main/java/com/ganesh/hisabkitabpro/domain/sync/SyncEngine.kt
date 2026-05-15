@@ -389,6 +389,26 @@ object SyncEngine {
         }
     }
 
+    private suspend fun coalescePendingDuplicates(item: SyncItem) {
+        val dao = syncDao ?: return
+        runCatching {
+            dao.deletePendingWithExactPayload(item.type, item.payload)
+            when (item.type) {
+                "TRANSACTION" -> {
+                    val txn = gson.fromJson(item.payload, Transaction::class.java)
+                    val ref = txn.txnRef.trim()
+                    if (ref.isNotEmpty()) dao.deletePendingTransactionsByTxnRef(ref)
+                }
+                "CUSTOMER" -> {
+                    val customer = gson.fromJson(item.payload, Customer::class.java)
+                    if (customer.id > 0L) dao.deletePendingCustomersById(customer.id)
+                }
+            }
+        }.onFailure {
+            Log.w(TAG, "Sync dedup coalesce skipped", it)
+        }
+    }
+
     private suspend fun persistOrQueue(item: SyncItem) {
         val dao = syncDao
         if (dao == null) {
@@ -396,6 +416,7 @@ object SyncEngine {
             Log.w(TAG, "Sync DAO unavailable; item parked in memory queue.")
             return
         }
+        coalescePendingDuplicates(item)
         runCatching {
             dao.insert(
                 SyncItemEntity(

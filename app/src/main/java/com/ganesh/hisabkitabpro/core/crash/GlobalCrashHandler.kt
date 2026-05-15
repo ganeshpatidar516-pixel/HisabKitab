@@ -2,6 +2,8 @@ package com.ganesh.hisabkitabpro.core.crash
 
 import android.content.Context
 import android.util.Log
+import com.ganesh.hisabkitabpro.core.feature.ActiveFeatureTracker
+import com.ganesh.hisabkitabpro.core.feature.FeatureRecoveryManager
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -11,7 +13,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class GlobalCrashHandler @Inject constructor(
-    private val context: Context
+    private val context: Context,
+    private val featureRecoveryManager: FeatureRecoveryManager,
 ) : Thread.UncaughtExceptionHandler {
 
     private val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
@@ -25,6 +28,10 @@ class GlobalCrashHandler @Inject constructor(
 
         recordCrashLoopMetric()
         saveCrashReport(throwable)
+        ActiveFeatureTracker.activeFeatureId?.let { featureId ->
+            runCatching { featureRecoveryManager.reportFeatureCrash(featureId) }
+                .onFailure { Log.w(TAG, "Feature crash tally skipped for $featureId", it) }
+        }
 
         defaultHandler?.uncaughtException(thread, throwable)
     }
