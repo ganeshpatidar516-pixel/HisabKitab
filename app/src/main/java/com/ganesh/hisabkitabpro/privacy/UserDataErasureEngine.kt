@@ -100,6 +100,7 @@ class UserDataErasureEngine @Inject constructor(
             "supplier_credit_terms_prefs",
             "bill_item_quick_memory",
             "sync_worker_retry_guard",
+            "sync_fallback_queue",
             "crash_reports",
             "crash_prefs",
             "feature_recovery",

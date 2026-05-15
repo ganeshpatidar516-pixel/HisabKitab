@@ -98,7 +98,11 @@ class OCRBillProcessor @Inject constructor(
                 txnRef = UUID.randomUUID().toString(),
                 createdAt = System.currentTimeMillis()
             )
-            transactionRepository.addTransaction(transaction)
+            val saveResult = transactionRepository.addTransaction(transaction)
+            if (saveResult.isFailure) {
+                OcrTelemetry.event("live_frame_end", mapOf("outcome" to "save_failed"))
+                return AutoBillOcrResult.Failed
+            }
             OcrTelemetry.event(
                 "live_frame_end",
                 mapOf(
@@ -217,7 +221,14 @@ class OCRBillProcessor @Inject constructor(
                     txnRef = UUID.randomUUID().toString(),
                     createdAt = System.currentTimeMillis()
                 )
-                transactionRepository.addTransaction(transaction)
+                val saveResult = transactionRepository.addTransaction(transaction)
+                if (saveResult.isFailure) {
+                    OcrTelemetry.event(
+                        "capture_save_end",
+                        mapOf("outcome" to "save_failed"),
+                    )
+                    return "Could not save to ledger. Please try again."
+                }
                 OcrTelemetry.event(
                     "capture_save_end",
                     mapOf(

@@ -17,6 +17,7 @@ import com.ganesh.hisabkitabpro.domain.repository.TransactionRepository
 import com.ganesh.hisabkitabpro.domain.repository.CustomerRepository
 import dagger.Lazy
 import dagger.hilt.android.qualifiers.ApplicationContext
+import androidx.room.withTransaction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.util.UUID
@@ -70,11 +71,12 @@ class InvoiceRepositoryImpl @Inject constructor(
                 createdAt = invoice.date
             )
 
-            invoiceDao.insertInvoice(entity)
-            invoiceDao.insertInvoiceItems(items)
-            
-            // This method automatically updates the customer's balance cache
-            transactionDao.insertTransactionWithBalanceUpdate(transaction)
+            appDatabase.get().withTransaction {
+                invoiceDao.insertInvoice(entity)
+                invoiceDao.insertInvoiceItems(items)
+                // Atomic with invoice rows — updates customer balanceCache in same Room txn.
+                transactionDao.insertTransactionWithBalanceUpdate(transaction)
+            }
             if (custIdLong > 0L) {
                 CustomerPaymentReminderScheduler.syncAfterCustomerBalanceChange(
                     context,

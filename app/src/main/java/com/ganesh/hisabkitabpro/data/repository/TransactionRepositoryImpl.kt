@@ -332,10 +332,16 @@ class TransactionRepositoryImpl @Inject constructor(
                     pair
                 }
             }
-            withContext(Dispatchers.IO) {
-                generatePdfForTransaction(result.second)
+            val pdfReady = withContext(Dispatchers.IO) {
+                generatePdfForTransaction(result.second) != null
             }
-            Result.success(CreateBillResult(billId = result.first, transactionId = result.second))
+            Result.success(
+                CreateBillResult(
+                    billId = result.first,
+                    transactionId = result.second,
+                    pdfReady = pdfReady,
+                ),
+            )
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -399,8 +405,8 @@ class TransactionRepositoryImpl @Inject constructor(
                     pair
                 }
             }
-            withContext(Dispatchers.IO) {
-                val pdfOk = generateProfessionalItemizedPdf(
+            val pdfReady = withContext(Dispatchers.IO) {
+                val itemizedOk = generateProfessionalItemizedPdf(
                     transactionId = result.second,
                     customerId = customerId,
                     items = items,
@@ -409,11 +415,15 @@ class TransactionRepositoryImpl @Inject constructor(
                     settingsGstEnabled = settingsGstEnabled,
                     settingsGstRatePercent = settingsGstRatePercent,
                 )
-                if (!pdfOk) {
-                    generatePdfForTransaction(result.second)
-                }
+                itemizedOk || generatePdfForTransaction(result.second) != null
             }
-            Result.success(CreateBillResult(billId = result.first, transactionId = result.second))
+            Result.success(
+                CreateBillResult(
+                    billId = result.first,
+                    transactionId = result.second,
+                    pdfReady = pdfReady,
+                ),
+            )
         } catch (e: Exception) {
             Result.failure(e)
         }

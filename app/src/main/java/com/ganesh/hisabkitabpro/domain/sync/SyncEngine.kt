@@ -37,8 +37,9 @@ import javax.net.ssl.SSLException
  *  - **Atomic per-item commit**. `dao.deleteById` is wrapped in `runCatching`
  *    + status update so a partial commit can never leave a row PENDING after
  *    a successful upload (which would have caused server duplicates).
- *  - **Last-Write-Wins conflict resolution** for HTTP 409 / 412 / 422: we
- *    drop the local row because the server has a newer copy.
+ *  - **Conflict handling (P2)** for HTTP 409 / 412 / 422: rows are marked
+ *    `FAILED` with [SyncFailureKind.Conflict] for user deep-retry — local
+ *    changes are not silently dropped.
  *  - **Failure classification** ([SyncFailureKind]) so the UI can distinguish
  *    Network vs AuthExpired vs Quota etc. and display correct copy.
  *  - **Sync Health Monitor signaling**: emits cycle start, per-item, and
@@ -452,6 +453,7 @@ object SyncEngine {
         }
         snapshot.forEach { item ->
             runCatching {
+                coalescePendingDuplicates(item)
                 dao.insert(
                     SyncItemEntity(
                         type = item.type,

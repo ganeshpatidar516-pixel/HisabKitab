@@ -1,5 +1,6 @@
 package com.ganesh.hisabkitabpro.network
 
+import com.ganesh.hisabkitabpro.domain.sync.SyncHealthMonitor
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.tasks.await
 
@@ -20,6 +21,9 @@ object FirebaseRetrofitAuthBridge {
         }
         val token = runCatching { user.getIdToken(false).await().token }.getOrNull()
         RetrofitClient.setToken(token.orEmpty())
+        if (!token.isNullOrBlank()) {
+            SyncHealthMonitor.clearWorkerPause()
+        }
     }
 
     /**
@@ -34,7 +38,11 @@ object FirebaseRetrofitAuthBridge {
         }
         user.getIdToken(false).addOnCompleteListener { task ->
             if (task.isSuccessful) {
-                RetrofitClient.setToken(task.result?.token.orEmpty())
+                val token = task.result?.token.orEmpty()
+                RetrofitClient.setToken(token)
+                if (token.isNotBlank()) {
+                    SyncHealthMonitor.clearWorkerPause()
+                }
             } else {
                 RetrofitClient.setToken("")
             }

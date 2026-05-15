@@ -320,6 +320,16 @@ fun FullScreenBillEntryScreen(
                             ) { result ->
                                 saving = false
                                 result.onSuccess { r ->
+                                    if (!r.pdfReady) {
+                                        Log.w("HK_BillShare", "Bill saved but PDF not ready for txnId=${r.transactionId}")
+                                        Toast.makeText(
+                                            context,
+                                            "Bill saved. PDF not ready to share — open ledger and use Share.",
+                                            Toast.LENGTH_LONG,
+                                        ).show()
+                                        onBillFlowComplete()
+                                        return@onSuccess
+                                    }
                                     // Same path as repository final PDF (shared/ + legacy migration); avoids
                                     // FileProvider IllegalArgumentException if only legacy root file existed.
                                     val pdfFile = InvoicePdfGenerator.resolveInvoicePdfFile(context, r.transactionId)

@@ -9,7 +9,9 @@ import kotlinx.coroutines.flow.Flow
 /** Result of creating a ledger bill (invoice) entry plus linked transaction id for PDF/share. */
 data class CreateBillResult(
     val billId: Long,
-    val transactionId: Long
+    val transactionId: Long,
+    /** False when ledger saved but receipt/itemized PDF could not be written. */
+    val pdfReady: Boolean = true,
 )
 
 interface TransactionRepository {

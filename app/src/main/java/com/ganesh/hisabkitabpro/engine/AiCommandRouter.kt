@@ -77,12 +77,10 @@ class AiCommandRouter(
                 txnRef = UUID.randomUUID().toString()
             )
 
-            transactionRepository.addTransaction(transaction)
-            
-            if (type == TransactionType.CREDIT) {
-                customerRepository.updateCustomerBalance(customer.id, amountPaise, 0L)
-            } else {
-                customerRepository.updateCustomerBalance(customer.id, 0L, amountPaise)
+            // balanceCache is recalculated inside addTransaction — do not apply a delta here (P0-1).
+            val saveResult = transactionRepository.addTransaction(transaction)
+            if (saveResult.isFailure) {
+                return AiActionResult.Error("Could not save transaction. Please try again.")
             }
 
             val typeText = if (type == TransactionType.CREDIT) "Udhaar (Credit)" else "Payment (Debit)"
