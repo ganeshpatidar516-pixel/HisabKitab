@@ -8,7 +8,7 @@ Reference: Phase-10 audit (read-only). Sacred flows frozen unless bugfix.
 - [x] ADR index + ADR-001..003
 - [x] Dependabot for Gradle catalog
 - [x] CI: `phase9_ops_canary` job
-- [ ] **You:** Fill rollback owners in `RELEASE_GOVERNANCE.md`
+- [x] Rollback owners in `RELEASE_GOVERNANCE.md`
 
 ## Tier B — Hygiene (complete for route layer)
 

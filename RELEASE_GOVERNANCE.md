@@ -8,11 +8,11 @@ Developer onboarding: `docs/ONBOARDING.md` · Architecture: `docs/architecture/R
 
 | Role | Name | Contact |
 |------|------|---------|
-| **Rollback owner** | _YOUR NAME_ | _phone / WhatsApp_ |
-| **Backup owner** | _BACKUP NAME_ | _phone / WhatsApp_ |
-| **Play Console owner** | _PLAY ADMIN EMAIL_ | _email_ |
+| **Rollback owner** | Ganesh Patidar | WhatsApp: **+91-9116882776** |
+| **Backup owner** | Parveen Patidar | WhatsApp: **+91-9602901229** |
+| **Play Console owner** | Ganesh Patidar | **ganeshpatidar516@gmail.com** |
 
-> Replace placeholders before any staged rollout above 5%. If blank at ship time → **NO-GO**.
+**Escalation:** Rollback owner → Backup owner → Play Console **Halt rollout** → reinstall previous AAB from `release-artifacts/`.
 
 ## Incident decision rule
 
@@ -22,8 +22,8 @@ Developer onboarding: `docs/ONBOARDING.md` · Architecture: `docs/architecture/R
 
 ## Phase-10 evolution gates (before staged % bump)
 
-- [ ] `docs/ONBOARDING.md` read by release engineer
-- [ ] Rollback table above filled
+- [x] `docs/ONBOARDING.md` read by release engineer
+- [x] Rollback table above filled
 - [ ] CI green: Android Build + Phase-10 Ops Canary workflows
 - [ ] Optional local: `scripts\phase9_ops_canary.ps1`
 
