@@ -37,11 +37,26 @@ object ProductionOpsTelemetry {
     ) {
         if (success && pdfReady) {
             Log.i(TAG, "invoice_save_ok source=${source.take(40)}")
+            OpsTelemetryHub.log(
+                context,
+                OpsTelemetryHub.Domain.INVOICE,
+                "bill_save_ok",
+                mapOf("source" to source.take(40)),
+            )
             return
         }
         Log.w(
             TAG,
             "invoice_save_issue success=$success pdfReady=$pdfReady source=$source bill=$billId txn=$transactionId",
+        )
+        OpsTelemetryHub.log(
+            context,
+            OpsTelemetryHub.Domain.INVOICE,
+            if (success) "bill_save_pdf_missing" else "bill_save_failed",
+            mapOf(
+                "pdf_ready" to pdfReady.toString(),
+                "source" to source.take(40),
+            ),
         )
         recordNonFatal(
             context,
@@ -70,6 +85,16 @@ object ProductionOpsTelemetry {
         Log.d(TAG, "api $method $safePath code=$httpCode ${durationMs}ms bucket=$bucket")
         val degraded = httpCode >= 500 || httpCode < 0 || durationMs >= SLOW_API_MS
         if (!degraded) return
+        OpsTelemetryHub.log(
+            context,
+            OpsTelemetryHub.Domain.API,
+            "call_degraded",
+            mapOf(
+                "http_code" to httpCode.toString(),
+                "latency_bucket" to bucket,
+                "error_kind" to (errorKind?.take(40) ?: ""),
+            ),
+        )
         recordNonFatal(
             context,
             signal = "api_call_degraded",
@@ -114,6 +139,16 @@ object ProductionOpsTelemetry {
         Log.w(
             TAG,
             "sync_cycle_degraded permanent=$permanentFailures authExpired=$authExpired attempted=$attempted",
+        )
+        OpsTelemetryHub.log(
+            context,
+            OpsTelemetryHub.Domain.SYNC,
+            "cycle_degraded",
+            mapOf(
+                "permanent_failures" to permanentFailures.toString(),
+                "auth_expired" to authExpired.toString(),
+                "attempted" to attempted.toString(),
+            ),
         )
         recordNonFatal(
             context,

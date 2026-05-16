@@ -1,43 +1,46 @@
 package com.ganesh.hisabkitabpro.domain.ocr
 
 import android.content.Context
-import android.os.Bundle
 import android.util.Log
-import com.ganesh.hisabkitabpro.feature.telemetry.TelemetryFeatureToggle
-import com.google.firebase.FirebaseApp
-import com.google.firebase.analytics.FirebaseAnalytics
+import com.ganesh.hisabkitabpro.core.firebase.OpsTelemetryHub
 
 /**
  * Wave 0 / 6 — non-PII OCR funnel logging. Never log raw OCR text, customer names, or amounts as
  * structured identifiers; only lengths, modes, coarse outcomes, and [BillAmountConfidence] / [BillAmountSource]
  * names for logcat / Crashlytics breadcrumbs.
  *
- * Firebase Analytics events are gated by [TelemetryFeatureToggle] and skipped when Firebase is not initialized.
+ * Phase-9 P2: routes through [OpsTelemetryHub] (`hk_ops_funnel`, domain=ocr).
+ * Legacy `hk_ocr_funnel` is no longer emitted — use BigQuery on `hk_ops_funnel` where domain=ocr.
  */
 object OcrTelemetry {
     private const val TAG = "HK_OCR"
-    private const val ANALYTICS_EVENT = "hk_ocr_funnel"
 
     fun event(phase: String, details: Map<String, String> = emptyMap(), context: Context? = null) {
         val tail = if (details.isEmpty()) "" else " " + details.entries.joinToString(" ") { "${it.key}=${it.value}" }
         Log.i(TAG, "phase=$phase$tail")
-        context?.applicationContext?.let { logAnalyticsIfEnabled(it, phase, details) }
+        OpsTelemetryHub.log(context, OpsTelemetryHub.Domain.OCR, phase, details)
     }
 
-    private fun logAnalyticsIfEnabled(context: Context, phase: String, details: Map<String, String>) {
-        if (FirebaseApp.getApps(context).isEmpty()) return
-        val toggle = TelemetryFeatureToggle(
-            context.getSharedPreferences("hisabkitab_prefs", Context.MODE_PRIVATE),
-        )
-        if (!toggle.isAnalyticsEnabled()) return
-        runCatching {
-            val bundle = Bundle().apply {
-                putString("phase", phase.take(40))
-                details.forEach { (k, v) ->
-                    putString(k.take(40), v.take(100))
-                }
-            }
-            FirebaseAnalytics.getInstance(context).logEvent(ANALYTICS_EVENT, bundle)
+    /** Optional duration for OCR phases (ms). */
+    fun eventTimed(
+        phase: String,
+        durationMs: Long,
+        details: Map<String, String> = emptyMap(),
+        context: Context? = null,
+    ) {
+        val bucket = when {
+            durationMs < 500 -> "lt_500ms"
+            durationMs < 2_000 -> "500ms_2s"
+            durationMs < 5_000 -> "2s_5s"
+            else -> "gte_5s"
         }
+        event(
+            phase,
+            details + mapOf(
+                "duration_ms" to durationMs.coerceAtMost(120_000L).toString(),
+                "duration_bucket" to bucket,
+            ),
+            context,
+        )
     }
 }

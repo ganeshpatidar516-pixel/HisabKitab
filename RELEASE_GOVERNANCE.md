@@ -64,6 +64,13 @@ Full steps: `docs/ops/PHASE9_LIVE_MONITORING_SETUP.md`
 - [ ] 48h daily ops review scheduled (first week of rollout)
 - [ ] BigQuery export linked (weekly review)
 
+## Phase-9 P2 — unified ops funnel (app)
+
+- [ ] Run `scripts/phase9_ops_canary.ps1` before each staged % bump
+- [ ] BigQuery dashboards use `hk_ops_funnel` (see `docs/ops/bigquery/hk_ops_funnel_queries.sql`)
+- [ ] Settings → Cloud shows **Production health snapshot** on test device
+- [ ] Railway uptime checks: `docs/ops/RAILWAY_UPTIME_CHECKS.md`
+
 ## Telemetry signals (Crashlytics)
 
 When crash reporting is ON in Settings, each session includes `version_code`, `version_name`, `build_type`.
@@ -79,6 +86,8 @@ Non-fatals include:
 | `balance_cache_repaired` | Opt-in or manual repair aligned cache to SQL sum |
 | `sync_cycle_degraded` | Sync cycle had permanent failures or auth expired |
 | `api_call_degraded` | API 5xx, network failure, or call ≥10s (path only, no PII) |
+
+**Analytics funnel** (`hk_ops_funnel`, when Analytics ON): domains `session`, `ocr`, `sync`, `invoice`, `api` — see `docs/ops/PHASE9_P2_ENTERPRISE_OPS.md`.
 
 ## Scope lock
 

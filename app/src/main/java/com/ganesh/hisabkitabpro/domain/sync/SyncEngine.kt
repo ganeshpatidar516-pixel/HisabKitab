@@ -97,7 +97,7 @@ object SyncEngine {
     fun initialize(syncDao: SyncDao, context: Context) {
         this.syncDao = syncDao
         this.appContext = context.applicationContext
-        SyncHealthMonitor.initialize(syncDao)
+        SyncHealthMonitor.initialize(syncDao, context)
     }
 
     /** P2 — reload RAM queue from disk after cold start, then flush into Room when possible. */

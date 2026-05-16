@@ -9,6 +9,7 @@ import android.util.Log
 import com.ganesh.hisabkitabpro.core.locale.AppLocaleManager
 import com.ganesh.hisabkitabpro.core.crash.GlobalCrashHandler
 import com.ganesh.hisabkitabpro.core.firebase.FirebaseTelemetryBootstrap
+import com.ganesh.hisabkitabpro.core.firebase.OpsTelemetryHub
 import com.ganesh.hisabkitabpro.core.performance.PerformanceGuard
 import com.ganesh.hisabkitabpro.core.storage.FileProviderStorageMigration
 import com.ganesh.hisabkitabpro.domain.profile.LogoNormalizationMigration
@@ -66,8 +67,9 @@ class HisabKitabApp : Application() {
         // Sync Health Monitor is initialized inside SyncEngine.initialize(),
         // but we re-bind defensively here so the StateFlow is hot from t=0
         // even if the engine init fails.
-        runCatching { com.ganesh.hisabkitabpro.domain.sync.SyncHealthMonitor.initialize(database.syncDao()) }
-            .onFailure { Log.e("HisabKitabApp", "Sync health monitor init failed", it) }
+        runCatching {
+            com.ganesh.hisabkitabpro.domain.sync.SyncHealthMonitor.initialize(database.syncDao(), this)
+        }.onFailure { Log.e("HisabKitabApp", "Sync health monitor init failed", it) }
         runCatching { SyncWorker.ensureScheduled(this) }
             .onFailure { Log.e("HisabKitabApp", "Sync worker schedule failed", it) }
         // Restore FastAPI Bearer for returning users (cold start) without touching ledger DB.
@@ -131,6 +133,13 @@ class HisabKitabApp : Application() {
                 performanceGuard.monitorMemory()
             }
         })
-        Log.i("HisabKitabApp", "Startup init completed in ${SystemClock.elapsedRealtime() - startupStart} ms")
+        val startupMs = SystemClock.elapsedRealtime() - startupStart
+        Log.i("HisabKitabApp", "Startup init completed in $startupMs ms")
+        OpsTelemetryHub.log(
+            this,
+            OpsTelemetryHub.Domain.SESSION,
+            "startup_ok",
+            mapOf("startup_ms" to startupMs.toString()),
+        )
     }
 }

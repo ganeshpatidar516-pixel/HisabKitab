@@ -38,7 +38,7 @@ Complete these in Firebase / Play Console **before** staged rollout above 5%.
 1. Firebase Console → **Project settings** → **Integrations** → link **BigQuery**.
 2. Enable daily export for Analytics.
 3. Weekly query ideas:
-   - `hk_ocr_funnel` event counts by `phase`
+   - `hk_ops_funnel` by `domain` + `phase` (see `docs/ops/bigquery/hk_ops_funnel_queries.sql`)
    - Crash correlation by `version_name` custom key (Crashlytics)
 
 ## 5) Session keys on every crash (app-side, Phase-9 P1)

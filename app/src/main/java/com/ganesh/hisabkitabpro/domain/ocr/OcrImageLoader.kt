@@ -111,6 +111,7 @@ object OcrImageLoader {
      * Caller **must** [Bitmap.recycle] [OcrDecodeForOcrResult.Decoded.bitmap].
      */
     fun decodeJpegFileForOcr(absolutePath: String, maxEdgePx: Int = DEFAULT_MAX_EDGE_PX): OcrDecodeForOcrResult {
+        val started = System.nanoTime()
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeFile(absolutePath, bounds)
         if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return OcrDecodeForOcrResult.Unreadable
@@ -134,6 +135,12 @@ object OcrImageLoader {
         if (scaled !== oriented) {
             oriented.recycle()
         }
+        val elapsedMs = (System.nanoTime() - started) / 1_000_000L
+        OcrTelemetry.eventTimed(
+            "ocr_decode_ok",
+            elapsedMs,
+            mapOf("max_edge" to maxEdgePx.toString()),
+        )
         return OcrDecodeForOcrResult.Decoded(scaled)
     }
 

@@ -9,6 +9,7 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
+import com.ganesh.hisabkitabpro.core.firebase.OpsTelemetryHub
 import com.ganesh.hisabkitabpro.data.repository.local.SyncDao
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -71,8 +72,14 @@ object SyncHealthMonitor {
     @Volatile
     private var syncDao: SyncDao? = null
 
-    fun initialize(syncDao: SyncDao) {
+    @Volatile
+    private var appContext: Context? = null
+
+    fun initialize(syncDao: SyncDao, context: Context? = null) {
         this.syncDao = syncDao
+        if (context != null) {
+            appContext = context.applicationContext
+        }
     }
 
     /** Called by [SyncEngine] before a cycle starts. */
@@ -136,6 +143,23 @@ object SyncHealthMonitor {
                 lastFailureKind = report.toLastKind(it.lastFailureKind),
                 workerPauseReason = if (clearPause) WorkerPauseReason.NONE else it.workerPauseReason,
                 message = message
+            )
+        }
+        appContext?.let { ctx ->
+            val syncPhase = when (phase) {
+                Phase.Healthy -> "cycle_healthy"
+                Phase.Degraded, Phase.Stuck -> "cycle_degraded"
+                Phase.Syncing -> "cycle_syncing"
+                Phase.Idle -> "cycle_idle"
+            }
+            OpsTelemetryHub.logSyncPhase(
+                ctx,
+                syncPhase,
+                mapOf(
+                    "pending" to pending.toString(),
+                    "failed" to failed.toString(),
+                    "permanent_failures" to report.permanentFailures.toString(),
+                ),
             )
         }
     }

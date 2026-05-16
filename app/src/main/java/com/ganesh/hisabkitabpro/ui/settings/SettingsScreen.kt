@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.ganesh.hisabkitabpro.R
+import com.ganesh.hisabkitabpro.core.firebase.LocalOpsSnapshot
 import com.ganesh.hisabkitabpro.addon.reminder.ReminderAutomationPrefs
 import com.ganesh.hisabkitabpro.core.locale.AppLocaleManager
 import com.ganesh.hisabkitabpro.core.locale.IndianLanguageCatalog
@@ -533,9 +534,11 @@ fun SettingsCloudScreen(
     onNavigateBack: () -> Unit,
     viewModel: SettingsViewModel,
 ) {
+    val context = LocalContext.current
     val syncStatus by viewModel.syncStatus.collectAsState()
     val syncHealth by viewModel.syncHealth.collectAsState()
     val balanceCacheAutoRepair by viewModel.balanceCacheAutoRepairEnabled.collectAsState()
+    val opsSnapshot = remember(context) { LocalOpsSnapshot.read(context) }
     val scope = rememberCoroutineScope()
     val colorScheme = MaterialTheme.colorScheme
     Scaffold(
@@ -659,6 +662,59 @@ fun SettingsCloudScreen(
                             stringResource(R.string.settings_enterprise_sync_retry),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp),
+                    color = colorScheme.surfaceVariant,
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.dp, colorScheme.outline.copy(alpha = 0.35f)),
+                ) {
+                    Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
+                        Text(
+                            text = stringResource(R.string.settings_ops_snapshot_title),
+                            color = colorScheme.onSurface,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(
+                            text = stringResource(
+                                R.string.settings_ops_snapshot_build,
+                                opsSnapshot.versionName,
+                                opsSnapshot.versionCode,
+                                opsSnapshot.buildType,
+                            ),
+                            modifier = Modifier.padding(top = 4.dp),
+                            color = colorScheme.onSurfaceVariant,
+                            fontSize = 11.sp,
+                        )
+                        val syncPhase = opsSnapshot.lastSyncPhase
+                            ?: syncHealth.phase.name.lowercase()
+                        Text(
+                            text = stringResource(R.string.settings_ops_snapshot_sync, syncPhase),
+                            modifier = Modifier.padding(top = 2.dp),
+                            color = colorScheme.onSurfaceVariant,
+                            fontSize = 11.sp,
+                        )
+                        val funnelLine = if (
+                            opsSnapshot.lastDomain != null && opsSnapshot.lastPhase != null
+                        ) {
+                            stringResource(
+                                R.string.settings_ops_snapshot_funnel,
+                                opsSnapshot.lastDomain,
+                                opsSnapshot.lastPhase,
+                            )
+                        } else {
+                            stringResource(R.string.settings_ops_snapshot_none)
+                        }
+                        Text(
+                            text = funnelLine,
+                            modifier = Modifier.padding(top = 2.dp),
+                            color = colorScheme.onSurfaceVariant,
+                            fontSize = 11.sp,
                         )
                     }
                 }

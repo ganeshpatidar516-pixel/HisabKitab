@@ -48,6 +48,11 @@
     <string name="ledger_empty_transactions">No transactions yet</string>
     <string name="customer_list_empty">No customers yet — tap + to add your first customer</string>
     <string name="settings_sync_in_progress">Syncing to cloud…</string>
+    <string name="settings_ops_snapshot_title">Production health snapshot</string>
+    <string name="settings_ops_snapshot_build">Build %1$s (%2$d) · %3$s</string>
+    <string name="settings_ops_snapshot_sync">Last sync phase: %1$s</string>
+    <string name="settings_ops_snapshot_funnel">Last signal: %1$s / %2$s</string>
+    <string name="settings_ops_snapshot_none">No ops events recorded yet on this device</string>
     <string name="settings_balance_cache_auto_repair_title">Auto-repair balance cache</string>
     <string name="settings_balance_cache_auto_repair_desc">On app start, align customer balances with ledger totals when they drift (does not change transactions).</string>
     <string name="settings_balance_cache_repair_now">Check &amp; repair balances now</string>

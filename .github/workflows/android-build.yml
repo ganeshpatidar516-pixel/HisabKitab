@@ -33,6 +33,9 @@ jobs:
       - name: Sync domain unit tests
         run: ./gradlew :app:testDebugUnitTest --tests "com.ganesh.hisabkitabpro.domain.sync.*" --no-daemon
 
+      - name: Ops telemetry unit tests
+        run: ./gradlew :app:testDebugUnitTest --tests "com.ganesh.hisabkitabpro.core.firebase.OpsTelemetryHubTest" --no-daemon
+
   release-compile:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
@@ -51,6 +54,9 @@ jobs:
 
       - name: Sync domain unit tests
         run: ./gradlew :app:testDebugUnitTest --tests "com.ganesh.hisabkitabpro.domain.sync.*" --no-daemon
+
+      - name: Ops telemetry unit tests
+        run: ./gradlew :app:testDebugUnitTest --tests "com.ganesh.hisabkitabpro.core.firebase.OpsTelemetryHubTest" --no-daemon
 
       - name: Compile release (no signing secrets)
         run: ./gradlew :app:assembleRelease --no-daemon
