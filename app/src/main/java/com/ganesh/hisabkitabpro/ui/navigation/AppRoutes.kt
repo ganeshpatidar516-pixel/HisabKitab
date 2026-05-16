@@ -50,7 +50,29 @@ object AppRoutes {
     const val StaffAttendance = "staff_attendance/{staffId}"
 
     fun customerLedger(customerId: Long) = "customer_ledger/$customerId"
+    fun customerProfile(customerId: Long) = "customer_profile/$customerId"
+    fun editCustomer(customerId: Long) = "edit_customer/$customerId"
+    fun customerStatement(customerId: Long) = "customer_statement/$customerId"
+    fun customerReminderControl(customerId: Long, encodedName: String) =
+        "customer_reminder_control/$customerId/$encodedName"
+    fun customerReminderHistory(customerId: Long, encodedName: String) =
+        "customer_reminder_history/$customerId/$encodedName"
+    fun addTransaction(customerId: Long, encodedName: String, type: String) =
+        "add_transaction/$customerId/$encodedName/$type"
+    fun fullBill(customerId: Long, encodedName: String, type: String) =
+        "full_bill/$customerId/$encodedName/$type"
+
     fun supplierLedger(supplierId: Long) = "supplier_ledger/$supplierId"
+    fun supplierStatement(supplierId: Long) = "supplier_statement/$supplierId"
+    fun supplierPartyReminderControl(partyId: Long, encodedName: String) =
+        "supplier_party_reminder_control/$partyId/$encodedName"
+    fun supplierPartyReminderHistory(partyId: Long, encodedName: String) =
+        "supplier_party_reminder_history/$partyId/$encodedName"
+
+    fun staffDetail(staffId: String) = "staff_detail/$staffId"
+    fun staffEdit(staffId: String) = "staff_edit/$staffId"
+    fun staffAttendance(staffId: String) = "staff_attendance/$staffId"
+
     fun scanBill(customerId: Long = 0L, prefillOnly: Boolean = true) =
         if (prefillOnly) "scan_bill/$customerId" else "scan_bill/$customerId?prefillOnly=false"
     fun scanSupplierBill(supplierId: Long) = "scan_supplier_bill/$supplierId"

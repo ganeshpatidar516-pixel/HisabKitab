@@ -1,20 +1,31 @@
-# HisabKitab Pro — Release Governance (Phase-8)
+# HisabKitab Pro — Release Governance (Phase-8+)
 
 Fill this once per release cycle. Do not ship production without completed **Rollback** and **Gate** sections.
+
+Developer onboarding: `docs/ONBOARDING.md` · Architecture: `docs/architecture/README.md`
 
 ## Rollback owner (required)
 
 | Role | Name | Contact |
 |------|------|---------|
-| **Rollback owner** | _fill before ship_ | _phone / WhatsApp_ |
-| **Backup owner** | _fill before ship_ | _phone / WhatsApp_ |
-| **Play Console owner** | _fill before ship_ | _email_ |
+| **Rollback owner** | _YOUR NAME_ | _phone / WhatsApp_ |
+| **Backup owner** | _BACKUP NAME_ | _phone / WhatsApp_ |
+| **Play Console owner** | _PLAY ADMIN EMAIL_ | _email_ |
+
+> Replace placeholders before any staged rollout above 5%. If blank at ship time → **NO-GO**.
 
 ## Incident decision rule
 
 1. **P0** (ledger wrong balance, data loss, crash loop): halt rollout → Play **halt rollout** → rollback owner decides previous AAB vs hotfix.
 2. **P1** (sync stuck, PDF share broken for many users): staged pause at current % → hotfix within 24h.
 3. **P2** (telemetry-only, isolated UI): document; fix in next train.
+
+## Phase-10 evolution gates (before staged % bump)
+
+- [ ] `docs/ONBOARDING.md` read by release engineer
+- [ ] Rollback table above filled
+- [ ] CI green: Android Build + Phase-10 Ops Canary workflows
+- [ ] Optional local: `scripts\phase9_ops_canary.ps1`
 
 ## Mandatory gates (in order)
 

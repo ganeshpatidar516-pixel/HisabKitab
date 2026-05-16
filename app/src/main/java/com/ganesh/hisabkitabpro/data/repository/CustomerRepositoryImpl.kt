@@ -12,6 +12,7 @@ import com.ganesh.hisabkitabpro.domain.cloud.SelectiveCloudMirror
 import com.ganesh.hisabkitabpro.domain.model.Customer
 import com.ganesh.hisabkitabpro.domain.repository.CUSTOMER_AI_SNAPSHOT_LIMIT
 import com.ganesh.hisabkitabpro.domain.repository.CustomerRepository
+import kotlin.DeprecationLevel
 import kotlinx.coroutines.withContext
 import com.ganesh.hisabkitabpro.domain.sync.SyncEngine
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +31,7 @@ class CustomerRepositoryImpl @Inject constructor(
 
     private val customerDao get() = customerDaoLazy.get()
 
+    @Deprecated("Prefer getCustomersPaged or searchCustomers", level = DeprecationLevel.WARNING)
     override fun getAllCustomers(): Flow<List<Customer>> =
         customerDao.getAllCustomers().flowOn(Dispatchers.IO)
 

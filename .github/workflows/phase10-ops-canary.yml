@@ -1,0 +1,36 @@
+# Phase-10 Tier A — pre-staged-rollout canary (no secrets)
+name: Phase-10 Ops Canary
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths:
+      - "app/**"
+      - "gradle/**"
+      - "scripts/phase9_ops_canary.ps1"
+      - ".github/workflows/phase10-ops-canary.yml"
+
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Ops telemetry unit tests
+        run: ./gradlew :app:testDebugUnitTest --tests "com.ganesh.hisabkitabpro.core.firebase.OpsTelemetryHubTest" --no-daemon
+
+      - name: Sync domain unit tests
+        run: ./gradlew :app:testDebugUnitTest --tests "com.ganesh.hisabkitabpro.domain.sync.*" --no-daemon
+
+      - name: Compile release Kotlin (no signing)
+        run: ./gradlew :app:compileReleaseKotlin --no-daemon

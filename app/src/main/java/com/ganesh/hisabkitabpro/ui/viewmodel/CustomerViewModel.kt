@@ -99,9 +99,7 @@ class CustomerViewModel @Inject constructor(
 
     val customers: StateFlow<List<Customer>> = recentCustomers
 
-    /** @deprecated Prefer capped queries; loads entire table. */
-    val allCustomers: StateFlow<List<Customer>> = repository.getAllCustomers()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+  // Phase-10: removed hot allCustomers StateFlow (full-table subscription). Use pagedCustomers / searchCustomers.
 
     val remindedCustomerIds: StateFlow<Set<Long>> = repository.getDistinctRemindedCustomerIds()
         .map { it.toSet() }

@@ -11,6 +11,10 @@ import kotlinx.coroutines.flow.Flow
 const val CUSTOMER_AI_SNAPSHOT_LIMIT = 500
 
 interface CustomerRepository {
+    @Deprecated(
+        message = "Prefer getCustomersPaged or searchCustomers; full-table Flow does not scale.",
+        level = DeprecationLevel.WARNING,
+    )
     fun getAllCustomers(): Flow<List<Customer>>
 
     suspend fun getCustomersByIds(ids: List<Long>): List<Customer>

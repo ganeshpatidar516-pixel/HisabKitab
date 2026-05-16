@@ -77,45 +77,45 @@ fun NavGraphBuilder.hisabAppNavGraph(
     pendingConfirmedCommand: MutableState<String?>,
     appSettings: AppSettings?,
 ) {
-        composable("dashboard") {
+        composable(AppRoutes.Dashboard) {
             DashboardScreen(
                 viewModel = transactionViewModel,
-                onCustomersClick = { navController.navigate("customers") },
-                onSuppliersClick = { navController.navigate("suppliers") },
-                onInvoiceClick = { navController.navigate("customers") },
+                onCustomersClick = { navController.navigate(AppRoutes.Customers) },
+                onSuppliersClick = { navController.navigate(AppRoutes.Suppliers) },
+                onInvoiceClick = { navController.navigate(AppRoutes.Customers) },
                 onAiAssistantClick = {
-                    navController.navigate("ai_assistant") {
+                    navController.navigate(AppRoutes.AiAssistant) {
                         popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                         launchSingleTop = true
                         restoreState = true
                     }
                 },
-                onViewTransactionsClick = { navController.navigate("customers") },
-                onAddEntryClick = { navController.navigate("customers") },
-                onScanBillClick = { navController.navigate("scan_bill/0") },
-                onBusinessInsightsClick = { navController.navigate("business_insights") },
-                onHelpClick = { navController.navigate("help_support") }
+                onViewTransactionsClick = { navController.navigate(AppRoutes.Customers) },
+                onAddEntryClick = { navController.navigate(AppRoutes.Customers) },
+                onScanBillClick = { navController.navigate(AppRoutes.scanBill(0L)) },
+                onBusinessInsightsClick = { navController.navigate(AppRoutes.BusinessInsights) },
+                onHelpClick = { navController.navigate(AppRoutes.HelpSupport) }
             )
         }
 
-        composable("customers") { 
+        composable(AppRoutes.Customers) { 
             CustomerListScreen(
                 viewModel = customerViewModel,
-                onCustomerClick = { id -> navController.navigate("customer_ledger/$id") },
-                onAddCustomerClick = { navController.navigate("add_customer") }
+                onCustomerClick = { id -> navController.navigate(AppRoutes.customerLedger(id)) },
+                onAddCustomerClick = { navController.navigate(AppRoutes.AddCustomer) }
             ) 
         }
 
-        composable("suppliers") {
+        composable(AppRoutes.Suppliers) {
             LaunchedEffect(Unit) { partyViewModel.setSupplierTab(true) }
             SupplierListScreen(
                 viewModel = partyViewModel,
-                onSupplierClick = { id -> navController.navigate("supplier_ledger/$id") },
-                onAddSupplierClick = { navController.navigate("add_supplier") }
+                onSupplierClick = { id -> navController.navigate(AppRoutes.supplierLedger(id)) },
+                onAddSupplierClick = { navController.navigate(AppRoutes.AddSupplier) }
             )
         }
 
-        composable("ai_assistant") {
+        composable(AppRoutes.AiAssistant) {
             val appContext = LocalContext.current.applicationContext
             val featureRecovery = remember(appContext) {
                 EntryPointAccessors.fromApplication(
@@ -140,8 +140,8 @@ fun NavGraphBuilder.hisabAppNavGraph(
                     )
                 )
                 when (command.intent) {
-                    AssistantIntent.OPEN_SETTINGS -> navController.navigate("settings")
-                    AssistantIntent.BUSINESS_ANALYSIS -> navController.navigate("business_insights")
+                    AssistantIntent.OPEN_SETTINGS -> navController.navigate(AppRoutes.Settings)
+                    AssistantIntent.BUSINESS_ANALYSIS -> navController.navigate(AppRoutes.BusinessInsights)
                     else -> Unit
                 }
             }
@@ -226,7 +226,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
             AIChatScreen(
                 assistantSampleCustomerNames = assistantCustomerNames,
                 onOpenCustomersClick = {
-                    navController.navigate("customers") {
+                    navController.navigate(AppRoutes.Customers) {
                         popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                         launchSingleTop = true
                         restoreState = true
@@ -283,61 +283,61 @@ fun NavGraphBuilder.hisabAppNavGraph(
             }
         }
 
-        composable("business_insights") {
+        composable(AppRoutes.BusinessInsights) {
             BusinessInsightsScreen(
                 viewModel = transactionViewModel,
                 onNavigateBack = { navController.popBackStack() }
             )
         }
 
-        composable("settings") {
+        composable(AppRoutes.Settings) {
             SettingsScreen(
                 onNavigateBack = { navController.popBackStack() },
                 showBackNavigation = false,
-                onNavigateToBusinessProfile = { navController.navigate("business_profile") },
-                onNavigateToVisitingCard = { navController.navigate("visiting_card_studio") },
-                onNavigateToBillingSettings = { navController.navigate("settings_billing") },
-                onNavigateToCloudSettings = { navController.navigate("settings_cloud") },
-                onNavigateToHelpSupport = { navController.navigate("help_support") },
-                onNavigateToPrivacyPolicy = { navController.navigate("privacy_policy") },
-                onNavigateToPrivacyAndData = { navController.navigate("privacy_and_data") },
-                onNavigateToSecurityPin = { navController.navigate("security_pin") },
-                onNavigateToStaffList = { navController.navigate("staff_list") },
-                onNavigateToInventory = { navController.navigate("inventory") },
+                onNavigateToBusinessProfile = { navController.navigate(AppRoutes.BusinessProfile) },
+                onNavigateToVisitingCard = { navController.navigate(AppRoutes.VisitingCardStudio) },
+                onNavigateToBillingSettings = { navController.navigate(AppRoutes.SettingsBilling) },
+                onNavigateToCloudSettings = { navController.navigate(AppRoutes.SettingsCloud) },
+                onNavigateToHelpSupport = { navController.navigate(AppRoutes.HelpSupport) },
+                onNavigateToPrivacyPolicy = { navController.navigate(AppRoutes.PrivacyPolicy) },
+                onNavigateToPrivacyAndData = { navController.navigate(AppRoutes.PrivacyAndData) },
+                onNavigateToSecurityPin = { navController.navigate(AppRoutes.SecurityPin) },
+                onNavigateToStaffList = { navController.navigate(AppRoutes.StaffList) },
+                onNavigateToInventory = { navController.navigate(AppRoutes.Inventory) },
                 viewModel = settingsViewModel,
                 transactionViewModel = transactionViewModel
             )
         }
 
-        composable("settings_billing") {
+        composable(AppRoutes.SettingsBilling) {
             SettingsBillingScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToInvoiceTemplates = { navController.navigate("html_brand_templates") },
+                onNavigateToInvoiceTemplates = { navController.navigate(AppRoutes.HtmlBrandTemplates) },
                 viewModel = settingsViewModel
             )
         }
 
-        composable("settings_cloud") {
+        composable(AppRoutes.SettingsCloud) {
             SettingsCloudScreen(
                 onNavigateBack = { navController.popBackStack() },
                 viewModel = settingsViewModel
             )
         }
 
-        composable("privacy_and_data") {
+        composable(AppRoutes.PrivacyAndData) {
             PrivacyAndDataScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
 
-        composable("staff_list") {
+        composable(AppRoutes.StaffList) {
             val staffViewModel: StaffViewModel = hiltViewModel()
             val staff by staffViewModel.staffList.collectAsStateWithLifecycle()
             val archived by staffViewModel.archivedStaff.collectAsStateWithLifecycle()
             StaffListScreen(
                 staffList = staff,
-                onAddStaffClick = { navController.navigate("staff_add") },
-                onStaffClick = { id -> navController.navigate("staff_detail/$id") },
+                onAddStaffClick = { navController.navigate(AppRoutes.StaffAdd) },
+                onStaffClick = { id -> navController.navigate(AppRoutes.staffDetail(id)) },
                 onNavigateBack = { navController.popBackStack() },
                 archivedStaff = archived,
                 onRestoreStaff = { id -> staffViewModel.restoreStaff(id) },
@@ -345,7 +345,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
             )
         }
 
-        composable("staff_add") {
+        composable(AppRoutes.StaffAdd) {
             val staffViewModel: StaffViewModel = hiltViewModel()
             val staff by staffViewModel.staffList.collectAsStateWithLifecycle()
             AddStaffScreen(
@@ -356,7 +356,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
         }
 
         composable(
-            route = "staff_detail/{staffId}",
+            route = AppRoutes.StaffDetail,
             arguments = listOf(navArgument("staffId") { type = NavType.StringType })
         ) { backStackEntry ->
             val staffId = backStackEntry.arguments?.getString("staffId").orEmpty()
@@ -384,9 +384,9 @@ fun NavGraphBuilder.hisabAppNavGraph(
                         staffViewModel.selectStaff(null)
                         navController.popBackStack()
                     },
-                    onEdit = { navController.navigate("staff_edit/$staffId") },
+                    onEdit = { navController.navigate(AppRoutes.staffEdit(staffId)) },
                     onMarkAttendance = {
-                        navController.navigate("staff_attendance/$staffId")
+                        navController.navigate(AppRoutes.staffAttendance(staffId))
                     },
                     onAddPayrollEntry = { kind, amountPaise, note ->
                         staffViewModel.addPayrollEntry(
@@ -432,7 +432,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
         }
 
         composable(
-            route = "staff_edit/{staffId}",
+            route = AppRoutes.StaffEdit,
             arguments = listOf(navArgument("staffId") { type = NavType.StringType })
         ) { backStackEntry ->
             val staffId = backStackEntry.arguments?.getString("staffId").orEmpty()
@@ -462,7 +462,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
         }
 
         composable(
-            route = "staff_attendance/{staffId}",
+            route = AppRoutes.StaffAttendance,
             arguments = listOf(navArgument("staffId") { type = NavType.StringType })
         ) { backStackEntry ->
             val staffId = backStackEntry.arguments?.getString("staffId").orEmpty()
@@ -489,7 +489,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
             }
         }
 
-        composable("inventory") {
+        composable(AppRoutes.Inventory) {
             val inventoryViewModel: InventoryViewModel = hiltViewModel()
             InventoryScreen(
                 viewModel = inventoryViewModel,
@@ -497,40 +497,40 @@ fun NavGraphBuilder.hisabAppNavGraph(
             )
         }
 
-        composable("help_support") {
+        composable(AppRoutes.HelpSupport) {
             HelpScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onAiChatClick = { navController.navigate("ai_assistant") },
-                onPrivacyPolicyClick = { navController.navigate("privacy_policy") }
+                onAiChatClick = { navController.navigate(AppRoutes.AiAssistant) },
+                onPrivacyPolicyClick = { navController.navigate(AppRoutes.PrivacyPolicy) }
             )
         }
 
-        composable("privacy_policy") {
+        composable(AppRoutes.PrivacyPolicy) {
             PrivacyPolicyScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
 
-        composable("security_pin") {
+        composable(AppRoutes.SecurityPin) {
             SecurityPinScreen(onNavigateBack = { navController.popBackStack() })
         }
 
-        composable("business_profile") {
+        composable(AppRoutes.BusinessProfile) {
             BusinessProfileScreen(
                 onNavigateBack = { navController.popBackStack() },
                 viewModel = settingsViewModel
             )
         }
 
-        composable("visiting_card_studio") {
+        composable(AppRoutes.VisitingCardStudio) {
             VisitingCardStudioScreen(
                 onNavigateBack = { navController.popBackStack() },
                 viewModel = settingsViewModel,
-                onEditBusinessProfile = { navController.navigate("business_profile") }
+                onEditBusinessProfile = { navController.navigate(AppRoutes.BusinessProfile) }
             )
         }
 
-        composable("add_customer") {
+        composable(AppRoutes.AddCustomer) {
             AddCustomerScreen(
                 viewModel = customerViewModel,
                 onNavigateBack = { navController.popBackStack() },
@@ -539,7 +539,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
         }
 
         composable(
-            route = "supplier_ledger/{supplierId}",
+            route = AppRoutes.SupplierLedger,
             arguments = listOf(navArgument("supplierId") { type = NavType.LongType })
         ) { entry ->
             val supplierId = entry.arguments?.getLong("supplierId") ?: 0L
@@ -563,16 +563,16 @@ fun NavGraphBuilder.hisabAppNavGraph(
                     SupplierLedgerScreen(
                         supplier = s,
                         partyViewModel = partyViewModel,
-                        onOpenLightOcr = { navController.navigate("scan_supplier_bill/${supplierId}") },
+                        onOpenLightOcr = { navController.navigate(AppRoutes.scanSupplierBill(supplierId)) },
                         onNavigateBack = { navController.popBackStack() },
-                        onOpenStatement = { navController.navigate("supplier_statement/${supplierId}") },
+                        onOpenStatement = { navController.navigate(AppRoutes.supplierStatement(supplierId)) },
                         onReminderHistoryClick = {
                             val enc = Uri.encode(s.name)
-                            navController.navigate("supplier_party_reminder_history/${supplierId}/$enc")
+                            navController.navigate(AppRoutes.supplierPartyReminderHistory(supplierId, enc))
                         },
                         onReminderControlClick = {
                             val enc = Uri.encode(s.name)
-                            navController.navigate("supplier_party_reminder_control/${supplierId}/$enc")
+                            navController.navigate(AppRoutes.supplierPartyReminderControl(supplierId, enc))
                         }
                     )
                 }
@@ -580,7 +580,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
         }
 
         composable(
-            route = "supplier_statement/{supplierId}",
+            route = AppRoutes.SupplierStatement,
             arguments = listOf(navArgument("supplierId") { type = NavType.LongType })
         ) { entry ->
             val supplierId = entry.arguments?.getLong("supplierId") ?: 0L
@@ -605,7 +605,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
             }
         }
 
-        composable("add_supplier") {
+        composable(AppRoutes.AddSupplier) {
             var name by remember { mutableStateOf("") }
             var phone by remember { mutableStateOf("") }
             var city by remember { mutableStateOf("") }
@@ -681,7 +681,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
         }
 
         composable(
-            route = "customer_ledger/{customerId}", 
+            route = AppRoutes.CustomerLedger, 
             arguments = listOf(navArgument("customerId") { type = NavType.LongType })
         ) { entry -> 
             val id = entry.arguments?.getLong("customerId") ?: 0L
@@ -706,22 +706,22 @@ fun NavGraphBuilder.hisabAppNavGraph(
                             customer = c,
                             transactionViewModel = transactionViewModel,
                             onNavigateBack = { navController.popBackStack() },
-                            onBillClick = { navController.navigate("customer_statement/${c.id}") },
-                            onProfileClick = { navController.navigate("customer_profile/${c.id}") },
+                            onBillClick = { navController.navigate(AppRoutes.customerStatement(c.id)) },
+                            onProfileClick = { navController.navigate(AppRoutes.customerProfile(c.id)) },
                             onReminderHistoryClick = {
                                 val enc = Uri.encode(c.name)
-                                navController.navigate("customer_reminder_history/${c.id}/$enc")
+                                navController.navigate(AppRoutes.customerReminderHistory(c.id, enc))
                             },
                             onReminderControlClick = {
                                 val enc = Uri.encode(c.name)
-                                navController.navigate("customer_reminder_control/${c.id}/$enc")
+                                navController.navigate(AppRoutes.customerReminderControl(c.id, enc))
                             },
                             onBulkRemindersClick = {
-                                navController.navigate("bulk_reminder_schedule")
+                                navController.navigate(AppRoutes.BulkReminderSchedule)
                             },
                             onAddEntry = { type ->
                                 val enc = Uri.encode(c.name)
-                                navController.navigate("add_transaction/${c.id}/$enc/${type.name}")
+                                navController.navigate(AppRoutes.addTransaction(c.id, enc, type.name))
                             }
                         )
                     }
@@ -730,7 +730,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
         }
 
         composable(
-            route = "customer_profile/{customerId}",
+            route = AppRoutes.CustomerProfile,
             arguments = listOf(navArgument("customerId") { type = NavType.LongType })
         ) { entry ->
             val customerId = entry.arguments?.getLong("customerId") ?: 0L
@@ -751,9 +751,9 @@ fun NavGraphBuilder.hisabAppNavGraph(
                             customer = c,
                             customerViewModel = customerViewModel,
                             onNavigateBack = { navController.popBackStack() },
-                            onEditClick = { navController.navigate("edit_customer/${c.id}") },
+                            onEditClick = { navController.navigate(AppRoutes.editCustomer(c.id)) },
                             onLedgerClick = { navController.popBackStack() },
-                            onAnalyticsClick = { navController.navigate("business_insights") }
+                            onAnalyticsClick = { navController.navigate(AppRoutes.BusinessInsights) }
                         )
                     }
                 }
@@ -761,7 +761,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
         }
 
         composable(
-            route = "edit_customer/{customerId}",
+            route = AppRoutes.EditCustomer,
             arguments = listOf(navArgument("customerId") { type = NavType.LongType })
         ) { entry ->
             val customerId = entry.arguments?.getLong("customerId") ?: 0L
@@ -788,7 +788,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
         }
 
         composable(
-            route = "customer_statement/{customerId}",
+            route = AppRoutes.CustomerStatement,
             arguments = listOf(navArgument("customerId") { type = NavType.LongType })
         ) { entry ->
             val customerId = entry.arguments?.getLong("customerId") ?: 0L
@@ -816,7 +816,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
         }
 
         composable(
-            route = "customer_reminder_control/{customerId}/{customerName}",
+            route = AppRoutes.CustomerReminderControl,
             arguments = listOf(
                 navArgument("customerId") { type = NavType.LongType },
                 navArgument("customerName") { type = NavType.StringType }
@@ -833,7 +833,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
         }
 
         composable(
-            route = "customer_reminder_history/{customerId}/{customerName}",
+            route = AppRoutes.CustomerReminderHistory,
             arguments = listOf(
                 navArgument("customerId") { type = NavType.LongType },
                 navArgument("customerName") { type = NavType.StringType }
@@ -849,7 +849,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
             )
         }
 
-        composable(route = "bulk_reminder_schedule") {
+        composable(route = AppRoutes.BulkReminderSchedule) {
             BulkReminderScheduleScreen(
                 viewModel = customerViewModel,
                 onNavigateBack = { navController.popBackStack() }
@@ -857,7 +857,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
         }
 
         composable(
-            route = "supplier_party_reminder_control/{partyId}/{partyName}",
+            route = AppRoutes.SupplierPartyReminderControl,
             arguments = listOf(
                 navArgument("partyId") { type = NavType.LongType },
                 navArgument("partyName") { type = NavType.StringType }
@@ -874,7 +874,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
         }
 
         composable(
-            route = "supplier_party_reminder_history/{partyId}/{partyName}",
+            route = AppRoutes.SupplierPartyReminderHistory,
             arguments = listOf(
                 navArgument("partyId") { type = NavType.LongType },
                 navArgument("partyName") { type = NavType.StringType }
@@ -891,7 +891,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
         }
 
         composable(
-            route = "add_transaction/{customerId}/{customerName}/{type}",
+            route = AppRoutes.AddTransaction,
             arguments = listOf(
                 navArgument("customerId") { type = NavType.LongType },
                 navArgument("customerName") { type = NavType.StringType },
@@ -909,16 +909,16 @@ fun NavGraphBuilder.hisabAppNavGraph(
                 viewModel = transactionViewModel,
                 onTransactionAdded = { navController.popBackStack() },
                 onNavigateBack = { navController.popBackStack() },
-                onOpenScanBill = { navController.navigate("scan_bill/$customerId") },
+                onOpenScanBill = { navController.navigate(AppRoutes.scanBill(customerId)) },
                 onOpenFullBill = {
                     val enc = Uri.encode(customerName)
-                    navController.navigate("full_bill/$customerId/$enc/${type.name}")
+                    navController.navigate(AppRoutes.fullBill(customerId, enc, type.name))
                 }
             )
         }
 
         composable(
-            route = "full_bill/{customerId}/{customerName}/{type}",
+            route = AppRoutes.FullBill,
             arguments = listOf(
                 navArgument("customerId") { type = NavType.LongType },
                 navArgument("customerName") { type = NavType.StringType },
@@ -962,7 +962,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
         }
 
         composable(
-            route = "scan_supplier_bill/{supplierId}",
+            route = AppRoutes.ScanSupplierBill,
             arguments = listOf(navArgument("supplierId") { type = NavType.LongType })
         ) { entry ->
             val supplierId = entry.arguments?.getLong("supplierId") ?: 0L
@@ -997,7 +997,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
         }
 
         composable(
-            route = "scan_bill/{customerId}?prefillOnly={prefillOnly}",
+            route = AppRoutes.ScanBill,
             arguments = listOf(
                 navArgument("customerId") { type = NavType.LongType },
                 navArgument("prefillOnly") {
@@ -1030,7 +1030,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
                     )
                     navController.popBackStack()
                     if (scanCustomerId == 0L) {
-                        navController.navigate("customers")
+                        navController.navigate(AppRoutes.Customers)
                     }
                 },
                 onResult = { msg ->
@@ -1041,7 +1041,7 @@ fun NavGraphBuilder.hisabAppNavGraph(
             )
         }
 
-        composable("html_brand_templates") {
+        composable(AppRoutes.HtmlBrandTemplates) {
             val ctx = LocalContext.current
             val scheme = MaterialTheme.colorScheme
             Scaffold(
