@@ -36,6 +36,9 @@ jobs:
       - name: Ops telemetry unit tests
         run: ./gradlew :app:testDebugUnitTest --tests "com.ganesh.hisabkitabpro.core.firebase.OpsTelemetryHubTest" --no-daemon
 
+      - name: AppRoutes stability tests
+        run: ./gradlew :app:testDebugUnitTest --tests "com.ganesh.hisabkitabpro.ui.navigation.AppRoutesStabilityTest" --no-daemon
+
   release-compile:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest

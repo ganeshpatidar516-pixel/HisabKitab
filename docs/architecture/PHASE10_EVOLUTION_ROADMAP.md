@@ -10,12 +10,13 @@ Reference: Phase-10 audit (read-only). Sacred flows frozen unless bugfix.
 - [x] CI: `phase9_ops_canary` job
 - [ ] **You:** Fill rollback owners in `RELEASE_GOVERNANCE.md`
 
-## Tier B — Hygiene (in progress)
+## Tier B — Hygiene (complete for route layer)
 
 - [x] Wire `AppRoutes` in `AppNavGraph`
 - [x] Remove hot `allCustomers` StateFlow subscription
-- [ ] Wire remaining `AppRoutes` in `MainActivity` / tests
-- [ ] Deprecate `getAllCustomers()` at repository level (when callers = 0)
+- [x] `NavScreen` + `AIChatScreen` + `AICommandRouter` use `AppRoutes`
+- [x] `AppRoutesStabilityTest` unit test
+- [x] `@Deprecated getAllCustomers()` on repository
 
 ## Tier C — Requires explicit approval
 

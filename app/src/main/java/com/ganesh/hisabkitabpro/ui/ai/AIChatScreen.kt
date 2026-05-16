@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.ganesh.hisabkitabpro.R
+import com.ganesh.hisabkitabpro.ui.navigation.AppRoutes
 import com.ganesh.hisabkitabpro.domain.ai.AIResponse
 import com.ganesh.hisabkitabpro.domain.voice.SpeechRecognizerManager
 
@@ -65,10 +66,10 @@ fun AIChatScreen(
     fun prettyActionName(route: String): String {
         return when {
             route.startsWith("customer_ledger/") -> "Open Customer Ledger"
-            route == "settings" -> "Open Settings"
-            route == "business_insights" -> "Open Business Insights"
-            route == "customers" -> "Open Customers"
-            route == "suppliers" -> "Open Suppliers"
+            route == AppRoutes.Settings -> "Open Settings"
+            route == AppRoutes.BusinessInsights -> "Open Business Insights"
+            route == AppRoutes.Customers -> "Open Customers"
+            route == AppRoutes.Suppliers -> "Open Suppliers"
             route == "ai_pilot" -> "Open Business Insights"
             else -> "Run AI Suggested Action"
         }
@@ -76,10 +77,10 @@ fun AIChatScreen(
 
     fun isSensitiveAction(route: String): Boolean {
         return route !in setOf(
-            "settings",
-            "business_insights",
-            "customers",
-            "suppliers"
+            AppRoutes.Settings,
+            AppRoutes.BusinessInsights,
+            AppRoutes.Customers,
+            AppRoutes.Suppliers,
         ) && !route.startsWith("customer_ledger/")
     }
 

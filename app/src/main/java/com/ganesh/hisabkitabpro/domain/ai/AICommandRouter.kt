@@ -10,6 +10,7 @@ import com.ganesh.hisabkitabpro.network.RetrofitClient
 import com.ganesh.hisabkitabpro.network.api.AiAssistantApi
 import com.ganesh.hisabkitabpro.network.api.ChatRequest
 import com.ganesh.hisabkitabpro.network.api.WikipediaApi
+import com.ganesh.hisabkitabpro.ui.navigation.AppRoutes
 import com.ganesh.hisabkitabpro.ui.viewmodel.TransactionViewModel
 import kotlinx.coroutines.flow.firstOrNull
 import java.util.*
@@ -131,7 +132,7 @@ class AICommandRouter(
             AIResponse(
                 message = "✅ हुक्म की तामील! ₹$amountRupees ${if(type == TransactionType.DEBIT) "जमा" else "उधार"} कर दिया है ${customer.name} के खाते में।",
                 type = ResponseType.TRANSACTION_CARD,
-                actions = listOf(AIAction("खाता देखें", "customer_ledger/${customer.id}"))
+                actions = listOf(AIAction("खाता देखें", AppRoutes.customerLedger(customer.id)))
             )
         } else if (amountPaise > 0) {
             pendingAmount = amountPaise
@@ -156,7 +157,7 @@ class AICommandRouter(
         return AIResponse(
             message = "✅ डन! ₹$amtRupees ${if(type == TransactionType.DEBIT) "जमा" else "उधार"} कर दिया गया है ${customer.name} के खाते में।",
             type = ResponseType.TRANSACTION_CARD,
-            actions = listOf(AIAction("खाता देखें", "customer_ledger/${customer.id}"))
+            actions = listOf(AIAction("खाता देखें", AppRoutes.customerLedger(customer.id)))
         )
     }
 

@@ -10,11 +10,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.ganesh.hisabkitabpro.R
 
 sealed class NavScreen(val route: String, val titleRes: Int, val icon: ImageVector) {
-    object Home : NavScreen("dashboard", R.string.nav_home, Icons.Default.Home)
-    object Customers : NavScreen("customers", R.string.nav_customers, Icons.Default.People)
-    object Suppliers : NavScreen("suppliers", R.string.nav_suppliers, Icons.Default.Inventory)
-    object AI : NavScreen("ai_assistant", R.string.nav_ai_assistant, Icons.Default.AutoAwesome)
-    object Settings : NavScreen("settings", R.string.nav_settings, Icons.Default.Settings)
+    object Home : NavScreen(AppRoutes.Dashboard, R.string.nav_home, Icons.Default.Home)
+    object Customers : NavScreen(AppRoutes.Customers, R.string.nav_customers, Icons.Default.People)
+    object Suppliers : NavScreen(AppRoutes.Suppliers, R.string.nav_suppliers, Icons.Default.Inventory)
+    object AI : NavScreen(AppRoutes.AiAssistant, R.string.nav_ai_assistant, Icons.Default.AutoAwesome)
+    object Settings : NavScreen(AppRoutes.Settings, R.string.nav_settings, Icons.Default.Settings)
 }
 
 val bottomNavItems = listOf(
